@@ -1,9 +1,9 @@
-#############################################################################################################
+<############################################################################################################
 #                                                   My Profile
 #
-#    TODO: make script faster, needs to be under 500ms to suppress warning
 #
 #    Changelog:
+#        12/07/17 - Speed Optimization. Centralized Aliases Section
 #        12/06/17 - Permanently moved to GitHub
 #                   Added alias for grep, moved content, removed PSCX
 #        12/03/17 - Overhaul of Connect-ExchangeOnline. Now checks for Modern Authentication
@@ -32,7 +32,7 @@
 #        06/20/17 - Added Get-goat
 #        05/15/17 - Removed aggressive/unnecessary importing
 #
-#############################################################################################################
+############################################################################################################>
 [CmdletBinding()]
 Param(
   [switch]$Version,
@@ -58,28 +58,8 @@ $profileKey = $null
 #
 #############################################################################################################
 
-#Disable annoying beep on backspace
-Set-PSReadlineOption -BellStyle None
-
-#############################################################################################################
-#
-#                                              Aliases
-#
-#############################################################################################################
-set-alias touch New-Item
-set-alias grep Select-String
-set-alias get-commands get-command #bc I always accidently type this instead
-set-alias Shutdown-Computer Stop-Computer #because it makes more sense
-
-#hyperv specific
-if(Get-Module Hyper-V){
-    Set-Alias Shutdown-VM Stop-VM
-}
-
-#active directory specific
-if(Get-Module -ListAvailable -Name ActiveDirectory){
-    Set-alias Reset-ADAccountPassword Set-ADAccountPassword #because I cant remember this for some reason
-}
+#Disable annoying beep on backspace. Older version dont support
+if (!(Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSReadlineOption -BellStyle None}
 
 #############################################################################################################
 #
@@ -139,7 +119,6 @@ Function Get-ExternalIPAddress{
     if($full) {return Invoke-RestMethod http://ipinfo.io/json}
     else{return (Invoke-RestMethod http://ipinfo.io/json | Select-object -exp ip)}
 }
-if(!(Get-alias geip -ErrorAction SilentlyContinue)) {Set-alias geip Get-ExternalIPAddress}
 
 #Useful on older versions of powershell
 function Test-Admin {
@@ -152,8 +131,6 @@ function Test-Admin {
         return $true
     }
 }
-#backwards compatability with my old scripts
-if(!(Get-alias Test-isAdmin -ErrorAction SilentlyContinue)) {Set-alias Test-isAdmin Test-Admin}
 
 # Checks windows installer for what version of windows it contains
 function Get-WindowsInstaller {
@@ -171,7 +148,6 @@ function Get-WindowsInstaller {
         else { $index = -1 }
     }
 }
-if(!(Get-alias Check-WindowsInstaller -ErrorAction SilentlyContinue)) {Set-Alias Check-WindowsInstaller Get-WindowsInstaller}
 
 # stolen from https://gallery.technet.microsoft.com/scriptcenter/Send-WOL-packet-using-0638be7b
 function Send-WakeOnLan
@@ -202,7 +178,6 @@ function Send-WakeOnLan
     $UDPclient.Connect($broadcast,$port)
     [void]$UDPclient.Send($packet, 102) 
 }
-if(!(Get-alias Send-WOL -ErrorAction SilentlyContinue)) {Set-Alias Send-WOL Send-WakeOnLan}
 
 # TODO: add option to send to different computer
 function Invoke-TextToSpeech {
@@ -263,7 +238,6 @@ function Connect-ExchangeOnline {
     }
     if ($PSSession -ne $null) { Import-PSSession $PSSession -AllowClobber }
 }
-if(!(Get-alias Connect-Exo -ErrorAction SilentlyContinue)){ Set-Alias Connect-Exo Connect-ExchangeOnline }
 
 # connect to the security and compliance center using modern or basic authentication
 function Connect-SecurityAndComplianceCenter {
@@ -276,8 +250,6 @@ function Connect-SecurityAndComplianceCenter {
     $param = @{UserPrincipalName=$UserPrincipalName;Credential=$Credential;ConnectionURI=$ConnectionURI;UseBasic=$UseBasic}
     Connect-ExchangeOnline @param
 }
-if(!(Get-alias Connect-SaCC -ErrorAction SilentlyContinue)){ Set-Alias Connect-SaCC Connect-SecurityAndComplianceCenter }
-
 
 #############################################################################################################
 #
@@ -299,7 +271,6 @@ function Get-ComputerUptime {
     $uptime = (date) - (Get-CimInstance Win32_OperatingSystem -Namespace root\CIMV2).LastBootUpTime
     return New-Object psobject -Property @{"UpTime"=$uptime;"LastBootUpTime"=$bootuptime}
 }
-if(!(Get-Alias Get-Uptime -ErrorAction SilentlyContinue)){ Set-Alias Get-Uptime Get-ComputerUptime }
 
 function Get-ComputerMemoryUtilization {
     Param(
@@ -314,8 +285,6 @@ function Get-ComputerMemoryUtilization {
     Get-CimInstance Win32_OperatingSystem -CimSession $session | `
     Select-Object @{Name = "FreeGB";Expression = {[math]::Round($_.FreePhysicalMemory/1mb,2)}},@{Name = "TotalGB";Expression = {[int]($_.TotalVisibleMemorySize/1mb)}}
 }
-if(!(Get-alias Get-ComputerMemory -ErrorAction SilentlyContinue)) {Set-Alias Get-ComputerMemory Get-ComputerMemoryUtilization}
-if(!(Get-alias Get-MemoryUsage -ErrorAction SilentlyContinue)) {Set-Alias Get-MemoryUsage Get-ComputerMemoryUtilization}
 
 function Get-ComputerCpuUtilization {
     Param(
@@ -329,7 +298,6 @@ function Get-ComputerCpuUtilization {
     $session = New-CimSession -ComputerName $ComputerName    
     Get-CimInstance win32_processor -CimSession $session | Measure-Object -property LoadPercentage -Average | Select-Object Average
 }
-if(!(Get-alias Get-CpuUsage -ErrorAction SilentlyContinue)) {Set-Alias Get-CpuUsage Get-ComputerCpuUtilization}
 
 Function Get-ComputerUtilization{
     Param(
@@ -351,7 +319,6 @@ Function Get-ComputerUtilization{
     }
     if ($Credential){ $credHash['Credential'] = $Credential }
     
-    
     $s; switch($sort){
         "ID"  {$s = "ID"}
         "CPU" {$s = "CPU"}
@@ -361,12 +328,9 @@ Function Get-ComputerUtilization{
         Invoke-Command @credhash -ArgumentList $s,$size -ScriptBlock{
             Get-Process | Sort-Object -Descending $args[0] | Select-Object -First $args[1] | Format-Table
         }
-        if($Continue){
-            sleep 1; Clear-Host; Write-Host "`n`t`t`tPress Ctrl-C to exit`n" -ForegroundColor Red
-        }
+        if($Continue){ sleep 1; Clear-Host; Write-Host "`n`t`t`tPress Ctrl-C to exit`n" -ForegroundColor Red }
     } while ($Continue)
 }
-if(!(Get-alias top -ErrorAction SilentlyContinue)) {Set-Alias top Get-ComputerUtilization}
 
 #############################################################################################################
 #
@@ -449,6 +413,52 @@ TimeClock.psm1 76492d1116743f0423413b16050a5345MgB8AFAAOQBiAEYATABNAEYAUQB0AFkAM
         Unblock-File "$defaultPath\CstmModules\$fileName"
     }
 }
+
+#############################################################################################################
+#
+#                                              Aliases
+#
+#############################################################################################################
+
+function profileSetAlias{
+    Param(
+        [parameter(Position=0)][String]$Alias,
+        [parameter(Position=1)][String]$Command
+    )
+    if (!(Get-alias $Alias -ErrorAction SilentlyContinue) -and (Get-Command $Command -ErrorAction SilentlyContinue)){
+        new-Alias $Alias $Command  -Scope 1
+    }
+}
+
+# Standard Cmdlets
+profileSetAlias touch New-Item
+profileSetAlias grep Select-String
+profileSetAlias get-commands get-command #bc I always accidently type this instead
+profileSetAlias Shutdown-Computer Stop-Computer #because it makes more sense
+
+# Hyper-V specific
+profileSetAlias Shutdown-VM Stop-VM
+
+# Active Directory specific
+profileSetAlias Reset-ADAccountPassword Set-ADAccountPassword #because I cant remember this for some reason
+
+# Useful / Fun Cstm Functions
+profileSetAlias gt Get-Time
+profileSetAlias gg Get-Goat
+profileSetAlias geip Get-ExternalIPAddress
+profileSetAlias Test-isAdmin Test-Admin
+profileSetAlias Check-WindowsInstaller Get-WindowsInstaller
+profileSetAlias Set-Alias Send-WOL Send-WakeOnLan
+profileSetAlias Connect-Exo Connect-ExchangeOnline
+profileSetAlias Connect-SaCC Connect-SecurityAndComplianceCenter
+
+# Resources
+profileSetAlias Get-Uptime Get-ComputerUptime
+profileSetAlias Get-ComputerMemory Get-ComputerMemoryUtilization
+profileSetAlias Get-MemoryUsage Get-ComputerMemoryUtilization
+profileSetAlias Get-CpuUsage Get-ComputerCpuUtilization
+profileSetAlias top Get-ComputerUtilization
+
 
 #############################################################################################################
 #
