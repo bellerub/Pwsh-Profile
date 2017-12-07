@@ -1,14 +1,11 @@
 #############################################################################################################
 #                                                   My Profile
 #
-#    Default Location: "$Home\Documents\WindowsPowerShell\Profile.ps1"
-#
-#    TODO: Make compatible with PowerShell v3 and v4?
-#          -Package Management Preview for v3 & v4 msi should fix issues
 #    TODO: make script faster, needs to be under 500ms to suppress warning
-#    TODO: add help comments to TrustedHost, or move back to module instead of profile embed
 #
 #    Changelog:
+#        12/06/17 - Permanently moved to GitHub
+#                   Added alias for grep, moved content, removed PSCX
 #        12/03/17 - Overhaul of Connect-ExchangeOnline. Now checks for Modern Authentication
 #        12/02/17 - Added Connect-SecurityAndComplianceCenter
 #        10/22/17 - Added Resources Section which includes:
@@ -70,6 +67,7 @@ Set-PSReadlineOption -BellStyle None
 #
 #############################################################################################################
 set-alias touch New-Item
+set-alias grep Select-String
 set-alias get-commands get-command #bc I always accidently type this instead
 set-alias Shutdown-Computer Stop-Computer #because it makes more sense
 
@@ -124,7 +122,7 @@ function Update-Profile {
 #get profile version
 function Get-ProfileVersion { invoke-expression "$Home\Documents\WindowsPowerShell\profile.ps1 -Version" }
 
-#why goat-farming is better than IT
+#why goat farming is better than IT
 Function Get-Goat {
     $URI = "http://www.heldeus.nl/goat/GoatFarming.html"
     $HTML = Invoke-WebRequest -Uri $URI
@@ -132,6 +130,114 @@ Function Get-Goat {
     (($HTML).ParsedHtml.getElementsByTagName("p") | Where-Object { $_.className -eq "goat" } ).innerText | Get-Random
     Write-Host ""
 }
+
+Function Get-ExternalIPAddress{
+    #stolen from https://gallery.technet.microsoft.com/scriptcenter/Get-ExternalPublic-IP-c1b601bb
+    Param(
+        [switch]$Full
+    )
+    if($full) {return Invoke-RestMethod http://ipinfo.io/json}
+    else{return (Invoke-RestMethod http://ipinfo.io/json | Select-object -exp ip)}
+}
+if(!(Get-alias geip -ErrorAction SilentlyContinue)) {Set-alias geip Get-ExternalIPAddress}
+
+#Useful on older versions of powershell
+function Test-Admin {
+    $admin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    if (!($admin)){
+        throw "You are not running as an administrator"
+    }
+    else {
+        Write-Verbose "Got admin"
+        return $true
+    }
+}
+#backwards compatability with my old scripts
+if(!(Get-alias Test-isAdmin -ErrorAction SilentlyContinue)) {Set-alias Test-isAdmin Test-Admin}
+
+# Checks windows installer for what version of windows it contains
+function Get-WindowsInstaller {
+    param (
+        [Parameter(Position=0,Mandatory=$true)][String]$DriveLetter
+    )
+    Test-Admin
+    if(!(Get-Volume $DriveLetter[0] -ErrorAction SilentlyContinue)){throw "Volume with the property 'DriveLetter' equal to '$($DriveLetter[0])' cannot be found"}
+    $file = "install.wim"
+    if(Test-Path "$($DriveLetter[0]):\sources\install.esd"){ $file = "install.esd"}
+    for($index = 1; $index -ne 0; $index++){
+        $a = dism /Get-WimInfo /WimFile:$($DriveLetter[0])`:\sources\$file /index:$index | Select-String -Pattern "Name" -SimpleMatch
+        
+        if($a -ne $null){ write-host $a.ToString().SubString(7) }
+        else { $index = -1 }
+    }
+}
+if(!(Get-alias Check-WindowsInstaller -ErrorAction SilentlyContinue)) {Set-Alias Check-WindowsInstaller Get-WindowsInstaller}
+
+# stolen from https://gallery.technet.microsoft.com/scriptcenter/Send-WOL-packet-using-0638be7b
+function Send-WakeOnLan
+{
+<# 
+  .SYNOPSIS  
+    Send a WOL packet to a broadcast address
+  .PARAMETER mac
+   The MAC address of the device that need to wake up
+  .PARAMETER ip
+   The IP address where the WOL packet will be sent to
+  .EXAMPLE 
+   Send-WOL -mac 00:11:32:21:2D:11 -ip 192.168.8.255 
+#>
+
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$True,Position=1)]
+        [string]$MAC,
+        [string]$IP="255.255.255.255", 
+        [int]$Port=9
+    )   
+    $broadcast = [Net.IPAddress]::Parse($ip)
+    $mac=(($mac.replace(":","")).replace("-","")).replace(".","")
+    $target=0,2,4,6,8,10 | % {[convert]::ToByte($mac.substring($_,2),16)}
+    $packet = (,[byte]255 * 6) + ($target * 16)
+    $UDPclient = new-Object System.Net.Sockets.UdpClient
+    $UDPclient.Connect($broadcast,$port)
+    [void]$UDPclient.Send($packet, 102) 
+}
+if(!(Get-alias Send-WOL -ErrorAction SilentlyContinue)) {Set-Alias Send-WOL Send-WakeOnLan}
+
+# TODO: add option to send to different computer
+function Invoke-TextToSpeech {
+    param ([Parameter(Mandatory=$true, ValueFromPipeline=$true)] [string] $Text)
+    [Reflection.Assembly]::LoadWithPartialName('System.Speech') | Out-Null   
+    $object = New-Object System.Speech.Synthesis.SpeechSynthesizer 
+    $object.Speak($Text) 
+}
+
+function Install-DockerPS{
+    Register-PSRepository -Name DockerPS-Dev -SourceLocation https://ci.appveyor.com/nuget/docker-powershell-dev
+    Install-Module -Name Docker -Repository DockerPS-Dev -Scope CurrentUser -force
+}
+
+function Add-CredentialsToCsv{
+    param (
+        [pscredential]$Credential = (Get-Credential), 
+        [String]$VariableName,
+        [String]$Path = "$home\Documents\WindowsPowerShell\credentials.csv"
+    )
+    $username = $Credential.UserName
+    $SecurePass = $Credential.Password | ConvertFrom-SecureString -ErrorAction SilentlyContinue
+    if(!(Test-Path $Path)){
+        New-Item $Path -ItemType File
+        "`"VariableName`",`"Username`",`"Password`"" | Out-File $Path -Append
+    }
+    "`"$VariableName`",`"$username`",`"$SecurePass`"" | Out-File $Path -Append
+}
+
+
+#############################################################################################################
+#
+#                                        Modern Authentication O365
+#
+#############################################################################################################
 
 # connect to exchangeonline using modern authentication or basic
 function Connect-ExchangeOnline {
@@ -172,101 +278,6 @@ function Connect-SecurityAndComplianceCenter {
 }
 if(!(Get-alias Connect-SaCC -ErrorAction SilentlyContinue)){ Set-Alias Connect-SaCC Connect-SecurityAndComplianceCenter }
 
-Function Get-ExternalIPAddress{
-    #stolen from https://gallery.technet.microsoft.com/scriptcenter/Get-ExternalPublic-IP-c1b601bb
-    Param(
-        [switch]$Full
-    )
-    if($full) {return Invoke-RestMethod http://ipinfo.io/json}
-    else{return (Invoke-RestMethod http://ipinfo.io/json | Select-object -exp ip)}
-}
-if(!(Get-alias geip -ErrorAction SilentlyContinue)) {Set-alias geip Get-ExternalIPAddress}
-
-#Useful on older versions of powershell
-function Test-Admin {
-    $admin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-    if (!($admin)){
-        throw "You are not running as an administrator"
-    }
-    else {
-        Write-Verbose "Got admin"
-        return $true
-    }
-}
-#backwards compatability with my old scripts
-if(!(Get-alias geip -ErrorAction SilentlyContinue)) {Set-alias Test-isAdmin Test-Admin}
-
-# Checks windows installer for what version of windows it contains
-function Get-WindowsInstaller {
-    param (
-        [Parameter(Position=0,Mandatory=$true)][String]$DriveLetter
-    )
-    Test-Admin
-    if(!(Get-Volume $DriveLetter[0] -ErrorAction SilentlyContinue)){throw "Volume with the property 'DriveLetter' equal to '$($DriveLetter[0])' cannot be found"}
-    $file = "install.wim"
-    if(Test-Path "$($DriveLetter[0]):\sources\install.esd"){ $file = "install.esd"}
-    for($index = 1; $index -ne 0; $index++){
-        $a = dism /Get-WimInfo /WimFile:$($DriveLetter[0])`:\sources\$file /index:$index | Select-String -Pattern "Name" -SimpleMatch
-        
-        if($a -ne $null){ write-host $a.ToString().SubString(7) }
-        else { $index = -1 }
-    }
-}
-if(!(Get-alias geip -ErrorAction SilentlyContinue)) {Set-Alias Check-WindowsInstaller Get-WindowsInstaller}
-
-# stolen from https://gallery.technet.microsoft.com/scriptcenter/Send-WOL-packet-using-0638be7b
-function Send-WakeOnLan
-{
-<# 
-  .SYNOPSIS  
-    Send a WOL packet to a broadcast address
-  .PARAMETER mac
-   The MAC address of the device that need to wake up
-  .PARAMETER ip
-   The IP address where the WOL packet will be sent to
-  .EXAMPLE 
-   Send-WOL -mac 00:11:32:21:2D:11 -ip 192.168.8.255 
-#>
-
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$True,Position=1)]
-        [string]$MAC,
-        [string]$IP="255.255.255.255", 
-        [int]$Port=9
-    )   
-    $broadcast = [Net.IPAddress]::Parse($ip)
-    $mac=(($mac.replace(":","")).replace("-","")).replace(".","")
-    $target=0,2,4,6,8,10 | % {[convert]::ToByte($mac.substring($_,2),16)}
-    $packet = (,[byte]255 * 6) + ($target * 16)
-    $UDPclient = new-Object System.Net.Sockets.UdpClient
-    $UDPclient.Connect($broadcast,$port)
-    [void]$UDPclient.Send($packet, 102) 
-}
-if(!(Get-alias geip -ErrorAction SilentlyContinue)) {Set-Alias Send-WOL Send-WakeOnLan}
-
-# TODO: add option to send to different computer
-function Invoke-TextToSpeech {
-    param ([Parameter(Mandatory=$true, ValueFromPipeline=$true)] [string] $Text)
-    [Reflection.Assembly]::LoadWithPartialName('System.Speech') | Out-Null   
-    $object = New-Object System.Speech.Synthesis.SpeechSynthesizer 
-    $object.Speak($Text) 
-}
-
-function Add-CredentialsToCsv{
-    param (
-        [pscredential]$Credential = (Get-Credential), 
-        [String]$VariableName,
-        [String]$Path = "$home\Documents\WindowsPowerShell\credentials.csv"
-    )
-    $username = $Credential.UserName
-    $SecurePass = $Credential.Password | ConvertFrom-SecureString -ErrorAction SilentlyContinue
-    if(!(Test-Path $Path)){
-        New-Item $Path -ItemType File
-        "`"VariableName`",`"Username`",`"Password`"" | Out-File $Path -Append
-    }
-    "`"$VariableName`",`"$username`",`"$SecurePass`"" | Out-File $Path -Append
-}
 
 #############################################################################################################
 #
@@ -357,11 +368,6 @@ Function Get-ComputerUtilization{
 }
 if(!(Get-alias top -ErrorAction SilentlyContinue)) {Set-Alias top Get-ComputerUtilization}
 
-function Install-DockerPS{
-    Register-PSRepository -Name DockerPS-Dev -SourceLocation https://ci.appveyor.com/nuget/docker-powershell-dev
-    Install-Module -Name Docker -Repository DockerPS-Dev -Scope CurrentUser -force
-}
-
 #############################################################################################################
 #
 #                                            Trusted Hosts
@@ -412,7 +418,7 @@ function profileGetModules{
         Get-PackageProvider -Name NuGet -Force | Out-Null
     }
 
-    $modules = "NTFSSecurity","Posh-SSH","PSCX","AzureAD"
+    $modules = "NTFSSecurity","Posh-SSH","AzureAD"
 
     ForEach($module in $modules){
         if(!(Get-Module -ListAvailable -Name $module)){
@@ -476,11 +482,6 @@ if($(Split-Path $script:MyInvocation.MyCommand.Path) -ne $defaultPath){
 }
 
 if($Update){ profileGetModules; profileUpdateCustomModules }
-
-#Special import of PSCX
-if(Get-Module -ListAvailable -Name PSCX){
-    Import-Module Pscx -ArgumentList @{ModulesToImport=@{CD=$false}} -NoClobber -Prefix CX
-}
 
 # Import credentials
 if(Test-Path $defaultPath\credentials.csv){
