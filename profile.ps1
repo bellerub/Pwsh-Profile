@@ -448,7 +448,7 @@ profileSetAlias gg Get-Goat
 profileSetAlias geip Get-ExternalIPAddress
 profileSetAlias Test-isAdmin Test-Admin
 profileSetAlias Check-WindowsInstaller Get-WindowsInstaller
-profileSetAlias Set-Alias Send-WOL Send-WakeOnLan
+profileSetAlias Send-WOL Send-WakeOnLan
 profileSetAlias Connect-Exo Connect-ExchangeOnline
 profileSetAlias Connect-SaCC Connect-SecurityAndComplianceCenter
 
