@@ -3,6 +3,8 @@
 #
 #
 #    Changelog:
+#        12/09/17 - PowerShell Core Support for Initial Setup
+#                   Automated third version number based changelog
 #        12/07/17 - Speed Optimization. Centralized Aliases Section
 #        12/06/17 - Permanently moved to GitHub
 #                   Added alias for grep, moved content, removed PSCX
@@ -12,10 +14,10 @@
 #                    Get-ComputerUtilization
 #                    Get-ComputerCpuUtilization
 #                    Get-ComputerMemoryUtilization
-#                    Get-CompuerUptime
+#                    Get-ComputerUptime
 #        09/15/17 - Added Add-CredentialToCsv & changed credential handling in functions
 #        09/14/17 - Added credential import from CSV
-#                   Changed default module location to $defaultPath\CstmModules
+#                   Changed default module location to $ProfilePath\CstmModules
 #                   Added Invoke-TextToSpeech
 #        09/04/17 - Added Send-WakeOnLan
 #        08/28/17 - Added Get-WindowsInstaller
@@ -25,7 +27,7 @@
 #        06/28/17 - Added Update-Profile for easy profile management & added cleanup
 #        06/26/17 - v1 overhaul:
 #                    $secret now brought in as secure string
-#                    $checks for existing profileKey even if not in default path
+#                    checks for existing profileKey even if not in default path
 #                    new module handling
 #                    Added Update Switch to update script and modules
 #        06/25/17 - Added new alias & created connect-exchangeonline
@@ -37,11 +39,11 @@
 Param(
   [switch]$Version,
   [switch]$Update,
-  [string]$defaultPath = "$Home\Documents\WindowsPowerShell",
+  [string]$ProfilePath = $(Split-Path -Path $profile.CurrentUserAllHosts),
   [string]$hashedKey = "17849254117232230311251061602172192521711073196135452308324153250156321261542172814449"
 )
 $ProgressPreference='SilentlyContinue'
-$PSProfileVersion = '1.2.120317'
+$PSProfileVersion = "1.2." + ((Get-Content $ProfilePath\profile.ps1 | Select-String "/")[0].ToString().Split('-')[0] -replace '\D+(\d+)','$1')
 
 #Print Profile Version & Exit
 if ($Version.IsPresent) {
@@ -58,8 +60,8 @@ $profileKey = $null
 #
 #############################################################################################################
 
-#Disable annoying beep on backspace. Older version dont support
-if (!(Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSReadlineOption -BellStyle None}
+#Disable annoying beep on backspace
+if ((Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSReadlineOption -BellStyle None}
 
 #############################################################################################################
 #
@@ -74,7 +76,7 @@ function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() 
 Function Get-HyperVHost {
     Param(
         [String]$ComputerName = $env:COMPUTERNAME,
-        [System.Management.Automation.CredentialAttribute()]$Credential
+        [PSCredential]$Credential
     )
     if ($Credential){
         $PSDefaultParameterValues = $PSDefaultParameterValues.clone()
@@ -91,16 +93,19 @@ function Update-Profile {
         [switch]$IncludeModules
     )
     $uri = "https://raw.githubusercontent.com/SoarinFerret/Pwsh-Profile/master/profile.ps1"
-    Invoke-WebRequest -Uri $uri -OutFile "$Home\Documents\WindowsPowerShell\profile.ps1"
-    Unblock-File "$Home\Documents\WindowsPowerShell\profile.ps1"
+    Invoke-WebRequest -Uri $uri -OutFile "$ProfilePath\profile.ps1"
+    # Need to unblock file for Windows hosts
+    if($PSEdition -eq "Desktop" -or $PSVersionTable.OS -like "*Windows*"){
+        Unblock-File "$ProfilePath\profile.ps1"
+    }
     if($IncludeModules){
-        $updateCommand = "$Home\Documents\WindowsPowerShell\profile.ps1 -Update"
+        $updateCommand = "$ProfilePath\profile.ps1 -Update"
         Invoke-Expression $updateCommand
     }
 }
 
 #get profile version
-function Get-ProfileVersion { invoke-expression "$Home\Documents\WindowsPowerShell\profile.ps1 -Version" }
+function Get-ProfileVersion { invoke-expression "$ProfilePath\profile.ps1 -Version" }
 
 #why goat farming is better than IT
 Function Get-Goat {
@@ -172,7 +177,7 @@ function Send-WakeOnLan
     )   
     $broadcast = [Net.IPAddress]::Parse($ip)
     $mac=(($mac.replace(":","")).replace("-","")).replace(".","")
-    $target=0,2,4,6,8,10 | % {[convert]::ToByte($mac.substring($_,2),16)}
+    $target=0,2,4,6,8,10 | ForEach-Object {[convert]::ToByte($mac.substring($_,2),16)}
     $packet = (,[byte]255 * 6) + ($target * 16)
     $UDPclient = new-Object System.Net.Sockets.UdpClient
     $UDPclient.Connect($broadcast,$port)
@@ -226,7 +231,7 @@ function Connect-ExchangeOnline {
 
     # Check if Exchange Online PowerShell module is installed, otherwise revert to old way
     $Module = "Microsoft.Exchange.Management.ExoPowershellModule.dll"
-    if(!$UseBasic -and ($ModulePath = (ls $env:LOCALAPPDATA\Apps -Recurse | where {$_.Name -like $Module -and $_.DirectoryName -like "*tion*"})[0].FullName)){
+    if(!$UseBasic -and ($ModulePath = (Get-ChildItem $env:LOCALAPPDATA\Apps -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Name -like $Module -and $_.DirectoryName -like "*tion*"})[0].FullName)){
         $global:ConnectionUri = $ConnectionUri
         $global:AzureADAuthorizationEndpointUri = 'https://login.windows.net/common'
         $global:UserPrincipalName = $UserPrincipalName
@@ -243,7 +248,7 @@ function Connect-ExchangeOnline {
 function Connect-SecurityAndComplianceCenter {
     Param(
         $UserPrincipalName = "",
-        $Credential = $null,
+        [PSCredential]$Credential = $null,
         $ConnectionURI = 'https://ps.compliance.protection.outlook.com/PowerShell-LiveId',
         [switch]$UseBasic
     )
@@ -260,7 +265,7 @@ function Connect-SecurityAndComplianceCenter {
 function Get-ComputerUptime {
     Param(
         [String]$ComputerName = "localhost",
-        [System.Management.Automation.CredentialAttribute()]$Credential
+        [pscredential]$Credential
     )
     if ($Credential){
         $PSDefaultParameterValues = $PSDefaultParameterValues.clone()
@@ -275,7 +280,7 @@ function Get-ComputerUptime {
 function Get-ComputerMemoryUtilization {
     Param(
         [String]$ComputerName = "localhost",
-        [System.Management.Automation.CredentialAttribute()]$Credential
+        [PSCredential]$Credential
     )
     if ($Credential){
         $PSDefaultParameterValues = $PSDefaultParameterValues.clone()
@@ -289,7 +294,7 @@ function Get-ComputerMemoryUtilization {
 function Get-ComputerCpuUtilization {
     Param(
         [String]$ComputerName = "Localhost",
-        [System.Management.Automation.CredentialAttribute()]$Credential
+        [PSCredential]$Credential
     )
     if ($Credential){
         $PSDefaultParameterValues = $PSDefaultParameterValues.clone()
@@ -302,7 +307,7 @@ function Get-ComputerCpuUtilization {
 Function Get-ComputerUtilization{
     Param(
         [String]$ComputerName = $env:COMPUTERNAME,
-        [System.Management.Automation.CredentialAttribute()]$Credential,
+        [PSCredential]$Credential,
         [ValidateSet("CPU","RAM","ID")]
         [String]$Sort = "CPU",
         [int]$Size = 15,
@@ -328,7 +333,7 @@ Function Get-ComputerUtilization{
         Invoke-Command @credhash -ArgumentList $s,$size -ScriptBlock{
             Get-Process | Sort-Object -Descending $args[0] | Select-Object -First $args[1] | Format-Table
         }
-        if($Continue){ sleep 1; Clear-Host; Write-Host "`n`t`t`tPress Ctrl-C to exit`n" -ForegroundColor Red }
+        if($Continue){ Start-Sleep 1; Clear-Host; Write-Host "`n`t`t`tPress Ctrl-C to exit`n" -ForegroundColor Red }
     } while ($Continue)
 }
 
@@ -362,7 +367,7 @@ function Remove-TrustedHost {
         forEach($c in $ComputerName){
             if((Get-TrustedHost $c) -eq $c) {
                 $TrustedHosts = ""
-                (Get-TrustedHost).Replace("$c","") | %{if($_ -ne "") {$TrustedHosts += $_ + ","}}
+                (Get-TrustedHost).Replace("$c","") | ForEach-Object {if($_ -ne "") {$TrustedHosts += $_ + ","}}
                 Set-Item WSMan:\localhost\Client\TrustedHosts $TrustedHosts.TrimEnd(",") -Force
             }
         }
@@ -400,17 +405,17 @@ Micellaneous.psm1 76492d1116743f0423413b16050a5345MgB8ADQATQBkAGIAawAwAHcAdQBhAD
 TimeClock.psm1 76492d1116743f0423413b16050a5345MgB8AFAAOQBiAEYATABNAEYAUQB0AFkAMQBOAHUATQA5AGkAegBCAFUATgBRAFEAPQA9AHwAYwAzADgAYQAwADEAYwAwAGIANgA1AGIAMABlAGIANQA4ADMAZABiADcAOQA5ADYAYwAxADYAMABhAGQAZQBiADgAZgAzAGIAMgA4ADIAOQAwADQAMABlADcAZAA2ADEAOABiADAAZgA1AGMANQAzAGEAYwBjADMAYQA2ADAAYgA4AGMAZAAxAGUAZgAzADYAOAAzADAAZQA1ADgAYgA3ADUAYQBjADgAMwA4AGUAMQBhADMAZABhAGIAOABlAGEANQAyAGEAZQAwAGUAOAA2ADgAYgAwADAAMwBjADkAYgBiADgAOQAwADkAOQBhAGQANQBjAGUAYgBkADQAMgAxAGYAZABkADEANAAxADQAMwBkADQAMQBmAGYANwAxADcAYQA4ADEAZgAyADIANwA5AGUANwBiAGIAMABiADAAYwBjAGEANgA1ADgAZQBiADEAZgBjADAAMAA3AGQANAAzADkAMABkADcAZAAxADgANAA1AGYAOQBmAGUANABlADMAYgA1ADAAYwBhADIAMwA2ADAAYgA1ADQAMgBlADQAMQBhAGMAZgA0ADUANwAxAGMAYQA5AGMANwAzADAAMwA3AGYAZgA4AGQAZABmADYAZABkADQANAA4AGUAYwAxAGEAOAAxADIANwBmADkAZQAxAGIAYgBhADUAYQBjAGIANQBjADQAOABkADkAYgBkADMANAAyADcANwBlADcAOABhADcAYwAzAGEAZAA1AGMAZQAyAGYANAAyAGYANABkAGEAZgA5ADkAMQAxADIAYgBkADMAOQA4AGQAMgAyAGUANwBkADMAOABjADUAYgA4AGIANwAwADkAZgA3ADcAZAA3ADIANwAxAGYAZAAyADcAYgAxADUAYgA3ADEAMAAwADcAYgAwAGIAZgA5ADkAZABjAGIAMQBjADkAYwA5ADcAYgAzADEAZgBmADIAZAAwAGQAOQBlAGMAZgAzAGUANABiAGIANABkADgAYgAyADQAZgBjADcAZgA3ADMANgBhADUAMwA2ADIANwA5ADMAZgA5AGEANQBjADkANwBmADMAMwAzADUAZQBlADAAOQAwADIANgA0ADAAZQBmADgAYwA4ADYAZQAwADEAYgBmADkAMAAwADQAMABiAGMAMgBiADUAZAA5ADIAZQA2ADIAYwAwAGMAMwBhAGUAYgBiAGMAMwBlAGMANgA1ADQAZQBiADgAOAAxADgAOQBkAGIAOAA4ADIANAAyADEAYgA2AGYAYgA1ADEAMQA4AGMANwAxADMAZQBkAGIAZQBkADkAOQA5AGEANwA1ADQANgA0ADEANgBjADkAZQBhAGIAZgBkAGEAYQA0ADQANQA5ADUAMgAyADcAMQA5ADMANwAxADgAYwBkADkAMwA3AGMAMgA4ADYANgA0ADcAMgA1AGUAOQBiAGIANgBhADkAYwA5ADgAMgBlAGYAMwBhAGIAMQA0ADkAMABjADkAZgAyAGIANAA2ADYAMQA3ADkAMwA1ADIAYwA5ADkAYwBjAGQANQA0AGIAZABiAGUAZgA0ADkAMgA5ADAAZgA3ADQAYQA4ADUANwA0ADYAMgBmAGEAZAAzADQAZABmADQAMQBjAGIANwA2AGYANwBjADgAMAA0ADAAYgBlADUANQAwAGMAOABhAGMAZQA5ADgANQBjADEAZABmAGMAMwBlADYAYQBlADQANwA3ADkAYwBjAGUANAAwADYANQAzADMAZAAzADUANgBlADEAZgBmADEAYwAyAGMAMwBiADYAZgAxAGUAMQAxADMA"
 
     #Clean Slate Protocol
-    if(!$(Test-Path "$defaultPath\CstmModules")){ 
-        New-Item "$defaultPath\CstmModules" -ItemType Directory -Force
+    if(!$(Test-Path "$ProfilePath\CstmModules")){ 
+        New-Item "$ProfilePath\CstmModules" -ItemType Directory -Force
     }else{
-        Get-ChildItem "$defaultPath\CstmModules" -Recurse | Remove-item -Force
+        Get-ChildItem "$ProfilePath\CstmModules" -Recurse | Remove-item -Force
     }
 
     forEach($module in $data.Split("`n")){
         $url = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR((ConvertTo-SecureString -String $module.Split(" ")[1] -Key $profileKey)))    
         $fileName = "$($module.Split(" ")[0])"
-        Invoke-WebRequest -Uri $url -OutFile "$defaultPath\CstmModules\$fileName"
-        Unblock-File "$defaultPath\CstmModules\$fileName"
+        Invoke-WebRequest -Uri $url -OutFile "$ProfilePath\CstmModules\$fileName"
+        Unblock-File "$ProfilePath\CstmModules\$fileName"
     }
 }
 
@@ -435,6 +440,9 @@ profileSetAlias touch New-Item
 profileSetAlias grep Select-String
 profileSetAlias get-commands get-command #bc I always accidently type this instead
 profileSetAlias Shutdown-Computer Stop-Computer #because it makes more sense
+
+# PS Core Aliases
+profileSetAlias wget Invoke-WebRequest
 
 # Hyper-V specific
 profileSetAlias Shutdown-VM Stop-VM
@@ -467,17 +475,17 @@ profileSetAlias top Get-ComputerUtilization
 #############################################################################################################
 
 #set profileKey
-if(Test-Path "$defaultPath\key"){ $profileKey = Get-Content "$defaultPath\key" }
+if(Test-Path "$ProfilePath\key"){ $profileKey = Get-Content "$ProfilePath\key" }
 
 #if not ran in correct directory, get user input about stuff
-if($(Split-Path $script:MyInvocation.MyCommand.Path) -ne $defaultPath){
+if($(Split-Path $script:MyInvocation.MyCommand.Path) -ne $ProfilePath){
     $response = Read-Host "'$($MyInvocation.MyCommand)' was not run from its default location.`nWould you like to copy it there? This action will overwrite any previously created profile. (Y/N) "
     if($response -like "y*"){
         #create path if non-existent, otherwise copy item
-        if(!(test-path $defaultPath)){New-Item -Path $defaultPath -ItemType Directory -Force}
-        Copy-Item ".\$($MyInvocation.MyCommand)" -Destination "$defaultPath\profile.ps1" -Force
+        if(!(test-path $ProfilePath)){New-Item -Path $ProfilePath -ItemType Directory -Force}
+        Copy-Item ".\$($MyInvocation.MyCommand)" -Destination "$ProfilePath\profile.ps1" -Force
     }
-    else { $defaultPath = (Get-Location).Path }
+    else { $ProfilePath = (Get-Location).Path }
 
     #test existing profileKey, check against known hash, else ask for profileKey
     $hasher = New-Object System.Security.Cryptography.SHA256Managed
@@ -488,14 +496,14 @@ if($(Split-Path $script:MyInvocation.MyCommand.Path) -ne $defaultPath){
         }while( $(-join $hasher.ComputeHash($profileKey)) -ne $hashedKey )
     }
     #save profileKey if staying on computer
-    if($response -like "y*") { $profileKey | Out-File -FilePath "$defaultPath\key" }
+    if($response -like "y*") { $profileKey | Out-File -FilePath "$ProfilePath\key" }
 }
 
 if($Update){ profileGetModules; profileUpdateCustomModules }
 
 # Import credentials
-if(Test-Path $defaultPath\credentials.csv){
-    $credCSV = Import-CSV "$defaultPath\credentials.csv"
+if(Test-Path $ProfilePath\credentials.csv){
+    $credCSV = Import-CSV "$ProfilePath\credentials.csv"
     forEach($item in $credCSV){
         $username = $item.Username
         $SecurePass = $item.Password | ConvertTo-SecureString -ErrorAction SilentlyContinue
@@ -508,16 +516,13 @@ if(Test-Path $defaultPath\credentials.csv){
 }
 
 # Import custom modules
-if(test-path $defaultPath\CstmModules){
-    Get-ChildItem "$defaultPath\CstmModules" | ForEach-Object{ Import-Module $_.FullName -Force -WarningAction SilentlyContinue }
+if(test-path $ProfilePath\CstmModules){
+    Get-ChildItem "$ProfilePath\CstmModules" | ForEach-Object{ Import-Module $_.FullName -Force -WarningAction SilentlyContinue }
 }
 
 $ProgressPreference='Continue'
 
-#Set profile variable to the name of your profile
-$Global:profile = "$home\Documents\WindowsPowerShell\profile.ps1"
-
 # Clean up items
 Remove-Item -Path Function:\profile*
 Remove-Item -Path Variable:\profileKey
-Remove-Variable defaultPath,Update,Version,hashedKey
+Remove-Variable Update,Version,hashedKey
