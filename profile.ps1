@@ -3,6 +3,7 @@
 #
 #
 #    Changelog:
+#        12/11/17 - PowerShell Core Support for Get-Goat
 #        12/09/17 - PowerShell Core Support for Initial Setup
 #                   Automated third version number based changelog
 #        12/07/17 - Speed Optimization. Centralized Aliases Section
@@ -60,7 +61,7 @@ $profileKey = $null
 #
 #############################################################################################################
 
-#Disable annoying beep on backspace
+# Disable annoying beep on backspace
 if ((Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSReadlineOption -BellStyle None}
 
 #############################################################################################################
@@ -69,10 +70,10 @@ if ((Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSRea
 #
 #############################################################################################################
 
-#Get-Time
+# Get-Time
 function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() } ) }
 
-#Get-HyperVHost
+# Get-HyperVHost
 Function Get-HyperVHost {
     Param(
         [String]$ComputerName = $env:COMPUTERNAME,
@@ -87,7 +88,7 @@ Function Get-HyperVHost {
     }
 }
 
-#update profile & modules
+# update profile & modules
 function Update-Profile {
     Param(
         [switch]$IncludeModules
@@ -104,15 +105,16 @@ function Update-Profile {
     }
 }
 
-#get profile version
+# get profile version
 function Get-ProfileVersion { invoke-expression "$ProfilePath\profile.ps1 -Version" }
 
-#why goat farming is better than IT
+# why goat farming is better than IT
 Function Get-Goat {
     $URI = "http://www.heldeus.nl/goat/GoatFarming.html"
     $HTML = Invoke-WebRequest -Uri $URI
     Write-Host "Why Goatfarming is better than IT: " -NoNewline
-    (($HTML).ParsedHtml.getElementsByTagName("p") | Where-Object { $_.className -eq "goat" } ).innerText | Get-Random
+    $response = ($HTML.Content.Remove(0,67) -split('<p class="goat">') |  Get-Random).TrimStart()
+    $response.Substring(0,$response.indexof('</p>'))
     Write-Host ""
 }
 
@@ -125,7 +127,7 @@ Function Get-ExternalIPAddress{
     else{return (Invoke-RestMethod http://ipinfo.io/json | Select-object -exp ip)}
 }
 
-#Useful on older versions of powershell
+# Useful on older versions of powershell
 function Test-Admin {
     $admin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
     if (!($admin)){
@@ -190,11 +192,6 @@ function Invoke-TextToSpeech {
     [Reflection.Assembly]::LoadWithPartialName('System.Speech') | Out-Null   
     $object = New-Object System.Speech.Synthesis.SpeechSynthesizer 
     $object.Speak($Text) 
-}
-
-function Install-DockerPS{
-    Register-PSRepository -Name DockerPS-Dev -SourceLocation https://ci.appveyor.com/nuget/docker-powershell-dev
-    Install-Module -Name Docker -Repository DockerPS-Dev -Scope CurrentUser -force
 }
 
 function Add-CredentialsToCsv{
@@ -443,6 +440,7 @@ profileSetAlias Shutdown-Computer Stop-Computer #because it makes more sense
 
 # PS Core Aliases
 profileSetAlias wget Invoke-WebRequest
+profileSetAlias ls Get-ChildItem
 
 # Hyper-V specific
 profileSetAlias Shutdown-VM Stop-VM
