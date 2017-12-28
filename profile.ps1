@@ -3,6 +3,8 @@
 #
 #
 #    Changelog:
+#        12/28/17 - PowerShell Core support for Get-XKCDPassword
+#                   Removed unnecessary Cim call in Get-ComputerUptime
 #        12/11/17 - PowerShell Core Support for Get-Goat
 #        12/09/17 - PowerShell Core Support for Initial Setup
 #                   Automated third version number based changelog
@@ -209,6 +211,34 @@ function Add-CredentialsToCsv{
     "`"$VariableName`",`"$username`",`"$SecurePass`"" | Out-File $Path -Append
 }
 
+# Get-XKCDPassword 2.0
+# TODO: add more options
+function Get-XKCDPassword {
+    Param(
+        $Path = "$(Split-Path $profile.CurrentUserAllHosts)\dictionary.txt",
+        $Uri = "https://raw.githubusercontent.com/SoarinFerret/Pwsh-Profile/master/dictionary.txt",
+        $Count = 3
+    )
+
+    if(!(Test-Path $Path)){
+        Write-Host "Running first time setup..." -ForegroundColor Green
+        Invoke-WebRequest -Uri $Uri -OutFile $Path
+    }
+
+    # Get words
+    $words = Get-Content $Path | Get-Random -Count $($Count*3)
+
+    # Generate Phrases
+    $out = @(); for($x = 0; $x -lt $count; $x++){
+        $pwd = $("{0:D2}" -f (Get-Random -Maximum 99))+`
+               $words[$x*$count]+`
+               $words[$x*$count+1].toUpper()+`
+               $words[$x*$count+2]+`
+               $("{0:D2}" -f (Get-Random -Maximum 99))
+        $out += $pwd
+    }
+    return $out
+}
 
 #############################################################################################################
 #
@@ -270,7 +300,7 @@ function Get-ComputerUptime {
     }
     $session = New-CimSession -ComputerName $ComputerName
     $bootuptime = (Get-CimInstance Win32_OperatingSystem -CimSession $session).LastBootUpTime
-    $uptime = (date) - (Get-CimInstance Win32_OperatingSystem -Namespace root\CIMV2).LastBootUpTime
+    $uptime = (date) - $bootuptime
     return New-Object psobject -Property @{"UpTime"=$uptime;"LastBootUpTime"=$bootuptime}
 }
 
@@ -428,7 +458,7 @@ function profileSetAlias{
         [parameter(Position=1)][String]$Command
     )
     if (!(Get-alias $Alias -ErrorAction SilentlyContinue) -and (Get-Command $Command -ErrorAction SilentlyContinue)){
-        new-Alias $Alias $Command  -Scope 1
+        new-Alias $Alias $Command -Scope 1
     }
 }
 
@@ -455,6 +485,9 @@ profileSetAlias geip Get-ExternalIPAddress
 profileSetAlias Test-isAdmin Test-Admin
 profileSetAlias Check-WindowsInstaller Get-WindowsInstaller
 profileSetAlias Send-WOL Send-WakeOnLan
+profileSetAlias gxp Get-XKCDPassword
+
+# O365 Modern Auth
 profileSetAlias Connect-Exo Connect-ExchangeOnline
 profileSetAlias Connect-SaCC Connect-SecurityAndComplianceCenter
 
