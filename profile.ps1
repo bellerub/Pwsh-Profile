@@ -3,6 +3,10 @@
 #
 #
 #    Changelog:
+#        12/31/17 - Added Hosts File Section which includes:
+#                    Search-HostsFile
+#                    Add-HostsFile
+#                    Open-HostsFile
 #        12/28/17 - PowerShell Core support for Get-XKCDPassword
 #                   Removed unnecessary Cim call in Get-ComputerUptime
 #        12/11/17 - PowerShell Core Support for Get-Goat
@@ -362,6 +366,56 @@ Function Get-ComputerUtilization{
         }
         if($Continue){ Start-Sleep 1; Clear-Host; Write-Host "`n`t`t`tPress Ctrl-C to exit`n" -ForegroundColor Red }
     } while ($Continue)
+}
+
+#############################################################################################################
+#
+#                                             Hosts File
+#
+#############################################################################################################
+
+# TODO: Remove-HostsFile
+
+function Search-HostsFile {
+    Param(
+        [String]$Hostname = "*",
+        [ipaddress]$IP = $null
+    )
+    $file = ""
+    if($PSEdition -eq "Desktop" -or $PSVersionTable.OS -like "*Windows*"){
+        $file = "$env:windir\System32\drivers\etc\hosts"
+    } else { $file = "/etc/hosts" }
+    $lines = Get-Content $file | where {$_[0] -ne '#' -and $_.trim() -ne "" -and $_ -like $Hostname}
+    if($ipaddress -ne $null){
+        $lines = $lines | where {$_ -like $ipaddress}
+    }
+    $hosts = @()
+    forEach ($line in $lines){
+        $parts = $line -replace "#.*" -split '\s+' # doesnt include EOL comments like this
+        $ip = $parts[0]
+        $names = $parts[1..($parts.Length-1)] | where {$_ -ne ""}
+        $hosts += New-Object -TypeName psobject -Property @{IPAddress=$ip;Hostname=$names}
+    }
+    return $hosts
+}
+
+function Add-HostsFile {
+    Param(
+        [Parameter(Mandatory=$true)]
+        [String[]]$Hostname,
+        [Parameter(Mandatory=$true)]
+        [ipaddress]$IP
+    )
+    Test-Admin
+    $file = ""
+    if($PSEdition -eq "Desktop" -or $PSVersionTable.OS -like "*Windows*"){
+        $file = "$env:windir\System32\drivers\etc\hosts"
+    } else { $file = "/etc/hosts" }
+    "$($ip.IPAddressToString)`t$hostname" | Out-File $file -Append -Encoding ascii
+}
+
+function Open-HostsFile {
+    Start-Process notepad "$env:windir\System32\drivers\etc\hosts"
 }
 
 #############################################################################################################
