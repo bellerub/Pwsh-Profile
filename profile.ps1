@@ -50,7 +50,7 @@ Param(
   [string]$hashedKey = "17849254117232230311251061602172192521711073196135452308324153250156321261542172814449"
 )
 $ProgressPreference='SilentlyContinue'
-$PSProfileVersion = "1.2." + ((Get-Content $ProfilePath\profile.ps1 | Select-String "/")[0].ToString().Split('-')[0] -replace '\D+(\d+)','$1')
+$PSProfileVersion = "1.2." + ((Get-Content $script:MyInvocation.MyCommand.Path | Select-String "/")[0].ToString().Split('-')[0] -replace '\D+(\d+)','$1')
 
 #Print Profile Version & Exit
 if ($Version.IsPresent) {
@@ -163,8 +163,7 @@ function Get-WindowsInstaller {
 }
 
 # stolen from https://gallery.technet.microsoft.com/scriptcenter/Send-WOL-packet-using-0638be7b
-function Send-WakeOnLan
-{
+function Send-WakeOnLan {
 <# 
   .SYNOPSIS  
     Send a WOL packet to a broadcast address
@@ -611,3 +610,6 @@ $ProgressPreference='Continue'
 Remove-Item -Path Function:\profile*
 Remove-Item -Path Variable:\profileKey
 Remove-Variable Update,Version,hashedKey
+
+# Change Directory to $home
+Set-Location $home
