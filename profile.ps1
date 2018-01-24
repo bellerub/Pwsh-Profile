@@ -3,6 +3,7 @@
 #
 #
 #    Changelog:
+#        01/24/18 - Fixed Version bug. Added a Set-Location at the end.
 #        12/31/17 - Added Hosts File Section which includes:
 #                    Search-HostsFile
 #                    Add-HostsFile
@@ -50,7 +51,7 @@ Param(
   [string]$hashedKey = "17849254117232230311251061602172192521711073196135452308324153250156321261542172814449"
 )
 $ProgressPreference='SilentlyContinue'
-$PSProfileVersion = "1.2." + ((Get-Content $script:MyInvocation.MyCommand.Path | Select-String "/")[0].ToString().Split('-')[0] -replace '\D+(\d+)','$1')
+$PSProfileVersion = "1.3." + ((Get-Content $script:MyInvocation.MyCommand.Path | Select-String "/")[0].ToString().Split('-')[0] -replace '\D+(\d+)','$1')
 
 #Print Profile Version & Exit
 if ($Version.IsPresent) {
