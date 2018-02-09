@@ -3,6 +3,7 @@
 #
 #
 #    Changelog:
+#        02/09/18 - Fixed Connect-ExchangeOnline bug
 #        01/24/18 - Fixed Version bug. Added a Set-Location at the end.
 #        12/31/17 - Added Hosts File Section which includes:
 #                    Search-HostsFile
@@ -262,7 +263,8 @@ function Connect-ExchangeOnline {
 
     # Check if Exchange Online PowerShell module is installed, otherwise revert to old way
     $Module = "Microsoft.Exchange.Management.ExoPowershellModule.dll"
-    if(!$UseBasic -and ($ModulePath = (Get-ChildItem $env:LOCALAPPDATA\Apps -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Name -like $Module -and $_.DirectoryName -like "*tion*"})[0].FullName)){
+    if(!$UseBasic -and ($ModulePath = (Get-ChildItem $env:LOCALAPPDATA\Apps -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Name -like $Module -and $_.DirectoryName -like "*tion*"}))){
+        $ModulePath= $ModulePath[0].FullName
         $global:ConnectionUri = $ConnectionUri
         $global:AzureADAuthorizationEndpointUri = 'https://login.windows.net/common'
         $global:UserPrincipalName = $UserPrincipalName
