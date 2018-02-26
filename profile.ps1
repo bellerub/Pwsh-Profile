@@ -3,6 +3,7 @@
 #
 #
 #    Changelog:
+#        02/26/18 - Added Enable-RDP. Changed 'where' to 'Where-Object' in some functions
 #        02/09/18 - Fixed Connect-ExchangeOnline bug
 #        01/24/18 - Fixed Version bug. Added a Set-Location at the end.
 #        12/31/17 - Added Hosts File Section which includes:
@@ -245,6 +246,27 @@ function Get-XKCDPassword {
     return $out
 }
 
+function Enable-RemoteDesktop {
+    Param(
+        [String]$ComputerName = $env:COMPUTERNAME,
+        [PSCredential]$Credential
+    )
+    # splat the computername and credential. 'Invoke-Command' is
+    # much quicker if computername is not specified on localhost
+
+    $credHash = @{}
+    if ($computername -notlike $env:COMPUTERNAME -and `
+        $ComputerName -notlike "localhost"){
+        $credHash['ComputerName'] = $ComputerName
+    }
+    if ($Credential){ $credHash['Credential'] = $Credential }
+
+    Invoke-Command @credhash -ScriptBlock{
+        Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" –Value 0;
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    }
+}
+
 #############################################################################################################
 #
 #                                        Modern Authentication O365
@@ -387,15 +409,15 @@ function Search-HostsFile {
     if($PSEdition -eq "Desktop" -or $PSVersionTable.OS -like "*Windows*"){
         $file = "$env:windir\System32\drivers\etc\hosts"
     } else { $file = "/etc/hosts" }
-    $lines = Get-Content $file | where {$_[0] -ne '#' -and $_.trim() -ne "" -and $_ -like $Hostname}
+    $lines = Get-Content $file | Where-Object {$_[0] -ne '#' -and $_.trim() -ne "" -and $_ -like $Hostname}
     if($ipaddress -ne $null){
-        $lines = $lines | where {$_ -like $ipaddress}
+        $lines = $lines | Where-Object {$_ -like $ipaddress}
     }
     $hosts = @()
     forEach ($line in $lines){
         $parts = $line -replace "#.*" -split '\s+' # doesnt include EOL comments like this
         $ip = $parts[0]
-        $names = $parts[1..($parts.Length-1)] | where {$_ -ne ""}
+        $names = $parts[1..($parts.Length-1)] | Where-Object {$_ -ne ""}
         $hosts += New-Object -TypeName psobject -Property @{IPAddress=$ip;Hostname=$names}
     }
     return $hosts
@@ -542,6 +564,7 @@ profileSetAlias Test-isAdmin Test-Admin
 profileSetAlias Check-WindowsInstaller Get-WindowsInstaller
 profileSetAlias Send-WOL Send-WakeOnLan
 profileSetAlias gxp Get-XKCDPassword
+profileSetAlias Enable-RDP Enable-RemoteDesktop
 
 # O365 Modern Auth
 profileSetAlias Connect-Exo Connect-ExchangeOnline
