@@ -3,13 +3,15 @@
 #
 #
 #    Changelog:
+#        03/17/18 - Moved Credential import to function instead of execution
+#                   Added local option for Update-Profile
 #        02/26/18 - Added Enable-RDP. Changed 'where' to 'Where-Object' in some functions
 #        02/09/18 - Fixed Connect-ExchangeOnline bug
 #        01/24/18 - Fixed Version bug. Added a Set-Location at the end.
 #        12/31/17 - Added Hosts File Section which includes:
-#                    Search-HostsFile
-#                    Add-HostsFile
-#                    Open-HostsFile
+#                   Search-HostsFile
+#                   Add-HostsFile
+#                   Open-HostsFile
 #        12/28/17 - PowerShell Core support for Get-XKCDPassword
 #                   Removed unnecessary Cim call in Get-ComputerUptime
 #        12/11/17 - PowerShell Core Support for Get-Goat
@@ -99,14 +101,29 @@ Function Get-HyperVHost {
 
 # update profile & modules
 function Update-Profile {
+    [CmdletBinding(DefaultParameterSetName='Remote')]
     Param(
+        [Parameter(ParameterSetName='Local')]
+        [String]$Path,
+        [Parameter(ParameterSetName='Remote')]
+        [string]$URI = "https://raw.githubusercontent.com/SoarinFerret/Pwsh-Profile/master/profile.ps1",
         [switch]$IncludeModules
     )
-    $uri = "https://raw.githubusercontent.com/SoarinFerret/Pwsh-Profile/master/profile.ps1"
-    Invoke-WebRequest -Uri $uri -OutFile "$ProfilePath\profile.ps1"
-    # Need to unblock file for Windows hosts
-    if($PSEdition -eq "Desktop" -or $PSVersionTable.OS -like "*Windows*"){
-        Unblock-File "$ProfilePath\profile.ps1"
+    # Copy from local location
+    if($Path){
+        if(Test-Path $Path){
+            $confirm = Read-Host "This will overwrite the existing profile. Are you sure you want to proceed? (y/n)"
+            if ($confirm -like "y*") {
+                Copy-Item $Path -Destination "$ProfilePath\profile.ps1" -Force
+            }
+        }
+    }
+    else {
+        Invoke-WebRequest -Uri $URI -OutFile "$ProfilePath\profile.ps1"
+        # Need to unblock file for Windows hosts
+        if($PSEdition -eq "Desktop" -or $PSVersionTable.OS -like "*Windows*"){
+            Unblock-File "$ProfilePath\profile.ps1"
+        }
     }
     if($IncludeModules){
         $updateCommand = "$ProfilePath\profile.ps1 -Update"
@@ -202,32 +219,19 @@ function Invoke-TextToSpeech {
     $object.Speak($Text) 
 }
 
-function Add-CredentialsToCsv{
-    param (
-        [pscredential]$Credential = (Get-Credential), 
-        [String]$VariableName,
-        [String]$Path = "$home\Documents\WindowsPowerShell\credentials.csv"
-    )
-    $username = $Credential.UserName
-    $SecurePass = $Credential.Password | ConvertFrom-SecureString -ErrorAction SilentlyContinue
-    if(!(Test-Path $Path)){
-        New-Item $Path -ItemType File
-        "`"VariableName`",`"Username`",`"Password`"" | Out-File $Path -Append
-    }
-    "`"$VariableName`",`"$username`",`"$SecurePass`"" | Out-File $Path -Append
-}
-
 # Get-XKCDPassword 2.0
 # TODO: add more options
 function Get-XKCDPassword {
     Param(
-        $Path = "$(Split-Path $profile.CurrentUserAllHosts)\dictionary.txt",
-        $Uri = "https://raw.githubusercontent.com/SoarinFerret/Pwsh-Profile/master/dictionary.txt",
-        $Count = 3
+        [String]$Path = "$(Split-Path $profile.CurrentUserAllHosts)\dictionary.txt",
+        [String]$Uri = "https://raw.githubusercontent.com/SoarinFerret/Pwsh-Profile/master/dictionary.txt",
+        [Int32]$Count = 3,
+        [switch]$UpdateDictionary
     )
 
-    if(!(Test-Path $Path)){
-        Write-Host "Running first time setup..." -ForegroundColor Green
+    if($UpdateDictionary -or !(Test-Path $Path)){
+        Write-Host "Updating Dictionary..." -ForegroundColor Green
+        Remove-Item -Path $Path -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Force
         Invoke-WebRequest -Uri $Uri -OutFile $Path
     }
 
@@ -262,7 +266,7 @@ function Enable-RemoteDesktop {
     if ($Credential){ $credHash['Credential'] = $Credential }
 
     Invoke-Command @credhash -ScriptBlock{
-        Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" –Value 0;
+        Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0;
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
     }
 }
@@ -390,6 +394,51 @@ Function Get-ComputerUtilization{
         }
         if($Continue){ Start-Sleep 1; Clear-Host; Write-Host "`n`t`t`tPress Ctrl-C to exit`n" -ForegroundColor Red }
     } while ($Continue)
+}
+
+#############################################################################################################
+#
+#                                             PSCredentials
+#
+#############################################################################################################
+
+function Add-PSCredentialsToCsv{
+    param (
+        [pscredential]$Credential = (Get-Credential), 
+        [String]$VariableName,
+        [String]$Path = "$home\Documents\WindowsPowerShell\credentials.csv"
+    )
+    $username = $Credential.UserName
+    $SecurePass = $Credential.Password | ConvertFrom-SecureString -ErrorAction SilentlyContinue
+    if(!(Test-Path $Path)){
+        New-Item $Path -ItemType File
+        "`"VariableName`",`"Username`",`"Password`"" | Out-File $Path -Append
+    }
+    "`"$VariableName`",`"$username`",`"$SecurePass`"" | Out-File $Path -Append
+}
+
+function Import-PSCredentialCsv{
+    param(
+        [String]$Path = "$(Split-Path -Path $profile.CurrentUserAllHosts)\credentials.csv",
+        [String]$VariablePrefix = "cred",
+        [String]$KeyFile
+    )
+    try{
+        if(Test-Path $Path){
+            $credCSV = Import-CSV $Path
+            forEach($item in $credCSV){
+                $username = $item.Username
+                $SecurePass = $item.Password | ConvertTo-SecureString -ErrorAction SilentlyContinue
+                if($SecurePass){
+                    New-Variable -Name $("cred" + $item.VariableName) -Value (
+                        New-Object PSCredential $username,$SecurePass
+                    )
+                }
+            }
+        }
+    }catch{
+        Write-Error $_
+    }
 }
 
 #############################################################################################################
@@ -612,18 +661,7 @@ if($(Split-Path $script:MyInvocation.MyCommand.Path) -ne $ProfilePath){
 if($Update){ profileGetModules; profileUpdateCustomModules }
 
 # Import credentials
-if(Test-Path $ProfilePath\credentials.csv){
-    $credCSV = Import-CSV "$ProfilePath\credentials.csv"
-    forEach($item in $credCSV){
-        $username = $item.Username
-        $SecurePass = $item.Password | ConvertTo-SecureString -ErrorAction SilentlyContinue
-        if($SecurePass){
-            New-Variable -Name $("cred" + $item.VariableName) -Value (
-                New-Object System.Management.Automation.PSCredential $username,$SecurePass
-            )
-        }
-    }
-}
+Import-PSCredentialCsv
 
 # Import custom modules
 if(test-path $ProfilePath\CstmModules){
