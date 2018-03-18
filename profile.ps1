@@ -5,6 +5,7 @@
 #    Changelog:
 #        03/17/18 - Moved Credential import to function instead of execution
 #                   Added local option for Update-Profile
+                    Invoke-Bsod
 #        02/26/18 - Added Enable-RDP. Changed 'where' to 'Where-Object' in some functions
 #        02/09/18 - Fixed Connect-ExchangeOnline bug
 #        01/24/18 - Fixed Version bug. Added a Set-Location at the end.
@@ -142,6 +143,32 @@ Function Get-Goat {
     $response = ($HTML.Content.Remove(0,67) -split('<p class="goat">') |  Get-Random).TrimStart()
     $response.Substring(0,$response.indexof('</p>'))
     Write-Host ""
+}
+
+# Create Bsod
+function Invoke-Bsod{
+    Param(
+        [String]$Computername = $env:COMPUTERNAME,
+        [Pscredential]$Credential
+    )
+    Write-Host "This will cause a Blue Screen of Death on $Computername.`nAre you sure absolutely sure you want to proceed? (y/n): " -ForegroundColor Red -NoNewline
+    $confirm = Read-Host 
+    if ($confirm -notlike "y*") {
+        return 0;
+    }
+
+    # splat invoke-command
+    $params = @{}
+    if ($computername -notlike $env:COMPUTERNAME -and `
+        $ComputerName -notlike "localhost"){
+        $params['ComputerName'] = $ComputerName
+    }
+    if ($Credential){ $params['Credential'] = $Credential }
+
+    Invoke-Command @params -ScriptBlock {
+        wmic process where processid!=0 call terminate
+    }
+
 }
 
 Function Get-ExternalIPAddress{
