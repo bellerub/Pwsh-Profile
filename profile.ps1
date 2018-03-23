@@ -3,6 +3,8 @@
 #
 #
 #    Changelog:
+#        03/23/18 - Added Prompt customizations
+#                   Added Persistent history
 #        03/17/18 - Added New-Key
 #                   Moved Credential import to function instead of execution
 #                   Added local option for Update-Profile
@@ -76,6 +78,36 @@ $profileKey = $null
 
 # Disable annoying beep on backspace
 if ((Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSReadlineOption -BellStyle None}
+
+# Persistent History
+$HistoryFilePath = Join-Path $env:USERPROFILE .ps_history
+Register-EngineEvent PowerShell.Exiting -Action { Get-History | Export-Clixml $HistoryFilePath } | out-null
+if (Test-path $HistoryFilePath) { Import-Clixml $HistoryFilePath | Add-History }
+
+# Customize my prompt
+function Prompt{
+    # Cache value so we can set it back later
+    $realLASTEXITCODE = $LASTEXITCODE
+
+    # whoami
+    Write-Host "`n[" -NoNewline
+    Write-Host "$ENV:USERNAME" -NoNewline -ForegroundColor Green
+    Write-Host "@$ENV:COMPUTERNAME]: " -NoNewline
+
+    # Print current working directory
+    Write-Host "$($ExecutionContext.SessionState.Path.CurrentLocation -replace ($env:USERPROFILE).Replace('\','\\'), "~")\".Replace('\\','\').Replace("Microsoft.PowerShell.Core\FileSystem::",'\') -ForegroundColor DarkGray
+
+    # Print elevation status
+    if(([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")){
+        Write-Host "(Elevated) " -ForegroundColor Red -NoNewline
+    }
+
+    # Set exitcode to its former glory
+    $global:LASTEXITCODE = $realLASTEXITCODE
+
+    # Return nested prompt level
+    return "PS$('>' * ($nestedPromptLevel + 1)) "
+}
 
 #############################################################################################################
 #
