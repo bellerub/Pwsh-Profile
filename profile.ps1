@@ -3,6 +3,7 @@
 #
 #
 #    Changelog:
+#        09/15/18 - Updated prompt support for PowerShell Core
 #        03/23/18 - Added Prompt customizations
 #                   Added Persistent history
 #        03/17/18 - Added New-Key
@@ -80,7 +81,7 @@ $profileKey = $null
 if ((Get-Command Set-PSReadlineOption -ErrorAction SilentlyContinue)) {Set-PSReadlineOption -BellStyle None}
 
 # Persistent History
-$HistoryFilePath = Join-Path $env:USERPROFILE .ps_history
+$HistoryFilePath = Join-Path $home .ps_history
 Register-EngineEvent PowerShell.Exiting -Action { Get-History | Export-Clixml $HistoryFilePath } | out-null
 if (Test-path $HistoryFilePath) { Import-Clixml $HistoryFilePath | Add-History }
 
@@ -91,11 +92,13 @@ function Prompt{
 
     # whoami
     Write-Host "`n[" -NoNewline
-    Write-Host "$ENV:USERNAME" -NoNewline -ForegroundColor Green
-    Write-Host "@$ENV:COMPUTERNAME]: " -NoNewline
+    Write-Host "$(whoami)" -NoNewline -ForegroundColor Green
+
+    if($PSVersionTable.OS -like "Darwin*"){ Write-Host "@$(scutil --get LocalHostName)]: " -NoNewline }
+    else { Write-Host "@$(hostname)]: " -NoNewline }
 
     # Print current working directory
-    Write-Host "$($ExecutionContext.SessionState.Path.CurrentLocation -replace ($env:USERPROFILE).Replace('\','\\'), "~")\".Replace('\\','\').Replace("Microsoft.PowerShell.Core\FileSystem::",'\') -ForegroundColor DarkGray
+    Write-Host "$($(Get-Location).Path -replace ($home).Replace('\','\\'), "~")\".Replace('\\','\').Replace("Microsoft.PowerShell.Core\FileSystem::",'\') -ForegroundColor DarkGray
 
     # Print elevation status
     if(([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")){
