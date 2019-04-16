@@ -98,7 +98,7 @@ function Prompt{
 
     # whoami
     Write-Host "`n[" -NoNewline
-    Write-Host "$(whoami)" -NoNewline -ForegroundColor Blue
+    Write-Host "$(whoami)" -NoNewline -ForegroundColor Green
 
     if($PSVersionTable.OS -like "Darwin*"){ Write-Host "@$(scutil --get LocalHostName)]: " -NoNewline }
     else { Write-Host "@$(hostname)]: " -NoNewline }
