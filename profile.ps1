@@ -550,16 +550,16 @@ function Set-ODQuota {
     
     }
     Function Sync-ADDelta 
-    {
-        param 
-        (
-       #     [parameter(mandatory=$TRUE)] @Userprincipalname
-        )
-    
-        $session = New-PSSession -ComputerName esu2sync.esu2.org 
-    
-        Invoke-Command -Session $session {Start-ADSyncSyncCycle -PolicyType Delta}
-    }
+{
+    param 
+    (
+        [parameter(mandatory=$TRUE)] $ComputerName
+    )
+
+    $session = New-PSSession -ComputerName $ComputerName
+
+    Invoke-Command -Session $session {Start-ADSyncSyncCycle -PolicyType Delta}
+}
 
 # Create Randomized Key
 function New-Key {
