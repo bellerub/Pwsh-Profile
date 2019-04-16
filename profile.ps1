@@ -695,6 +695,7 @@ function profileSetAlias{
 
 # Standard Cmdlets
 profileSetAlias OD Set-ODQuota
+profileSetAlias up update-profile
 profileSetAlias touch New-Item
 profileSetAlias grep Select-String
 profileSetAlias get-commands get-command #bc I always accidently type this instead
