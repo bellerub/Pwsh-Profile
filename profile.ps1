@@ -514,6 +514,26 @@ function Import-PSCredentialCsv{
     }
 }
 
+function Set-ODQuota {
+
+    Connect-SPOService -Url https://esu2org-admin.sharepoint.com #-Credential $credential
+    
+    #define target user
+    $targetuser = Read-Host -Prompt 'Input the username to change storage quota'
+    $path = $targetuser.replace('@',"_").replace('.',"_")
+    
+    $Date = Get-Date
+    
+    Write-Host "You input $targetuser on $Date"
+    
+    #Set the Quota to Maximim of 5TB
+    Set-SPOSite -Identity https://esu2org-my.sharepoint.com/personal/$path -StorageQuota 5242880
+    
+    #Check to make sure the change was applied
+    Get-SPOSite -Identity https://esu2org-my.sharepoint.com/personal/$path | select -property storagequota
+    }
+
+
 # Create Randomized Key
 function New-Key {
     param (
@@ -658,7 +678,7 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
-profileSetAlias corey ping
+profileSetAlias set-ODquota OD
 profileSetAlias touch New-Item
 profileSetAlias grep Select-String
 profileSetAlias get-commands get-command #bc I always accidently type this instead
