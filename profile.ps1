@@ -3,7 +3,10 @@
 #
 #
 #    Changelog:
+#         
 #         04/16/10 - Got rid of annoying EXO connecting at startup
+#                    Added OneDrive script to change storage quota
+#                    Adeed script for mailbox auditing
 #         04/10/19 - Forked from Codys profile (props to Cody)
 #         11/04/18 - Added alias for Get-Command as gcmd
 #                   Update References to ProfilePath
