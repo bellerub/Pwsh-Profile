@@ -731,9 +731,9 @@ $ProgressPreference='Continue'
 # Clean up items
 Remove-Item -Path Function:\profile*
 Remove-Item -Path Variable:\profileKey
-Remove-Variable Update,Version,hashedKey
+Remove-Variable Update,Version
 
 # Change Directory to $home
 Set-Location $home
-connect-exo
+
 
