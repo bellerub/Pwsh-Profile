@@ -694,8 +694,8 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
-profileSetAlias corey Ping
 profileSetAlias OD Set-ODQuota
+profileSetAlias corey ping
 profileSetAlias up update-profile
 profileSetAlias touch New-Item
 profileSetAlias grep Select-String
