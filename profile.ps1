@@ -174,7 +174,7 @@ function Update-Profile {
         $updateCommand = "$ProfilePath\profile.ps1 -Update"
         Invoke-Expression $updateCommand
     }
-. $profilepath\profile.ps1
+#. $profilepath\profile.ps1
 }
 
 # get profile version
