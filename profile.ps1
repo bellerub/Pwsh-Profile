@@ -151,7 +151,7 @@ function Update-Profile {
         [Parameter(ParameterSetName='Local')]
         [String]$Path,
         [Parameter(ParameterSetName='Remote')]
-        [string]$URI = "https://raw.githubusercontent.com/bellerub/Pwsh-Profile/master/profile.ps1",
+        [string]$URI = "https://raw.githubusercontent.com/bellerub/psprofile/master/profile.ps1",
         [switch]$IncludeModules
     )
     # Copy from local location
