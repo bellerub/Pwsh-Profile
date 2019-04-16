@@ -145,7 +145,7 @@ Function Get-HyperVHost {
 }
 
 # update profile & modules
-function Update-Profile {
+function  {
     [CmdletBinding(DefaultParameterSetName='Remote')]
     Param(
         [Parameter(ParameterSetName='Local')]
@@ -549,13 +549,19 @@ function Set-ODQuota {
     Get-Mailbox | Select Name, AuditEnabled, AuditLogAgeLimit
     
     }
-
     Function Sync-ADDelta {
-        param ([parameter(mandatory=$TRUE)] $Userprincipalname
-        )
-    
-    Connect-ExchangeOnline -UserPrincipalName $userprinicipalname
-    }    
+    param ([parameter(mandatory=$TRUE)] @Userprincipalname)
+
+Enter-PSSession -ComputerName esu2sync.esu2.org 
+
+Start-Sleep -Seconds 5
+
+Connect-ExchangeOnline -UserPrincipalName $userprincipalname
+Start-Sleep - 
+
+Start-ADSyncSyncCycle -PolicyType Delta
+
+}
 
 # Create Randomized Key
 function New-Key {
