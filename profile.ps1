@@ -706,6 +706,8 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
+profileSetAlias Get-MsolUserAttributes ID
+profileSetAlias update-profile up
 profileSetAlias set-ODquota OD
 profileSetAlias touch New-Item
 profileSetAlias grep Select-String
