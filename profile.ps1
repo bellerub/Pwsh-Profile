@@ -213,6 +213,7 @@ function Invoke-Bsod{
         wmic process where processid!=0 call terminate
     }
 
+
 }
 
 Function Get-ExternalIPAddress{
@@ -656,6 +657,7 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
+profileSetAlias corey ping
 profileSetAlias touch New-Item
 profileSetAlias grep Select-String
 profileSetAlias get-commands get-command #bc I always accidently type this instead
