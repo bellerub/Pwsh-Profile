@@ -383,9 +383,8 @@ function Connect-ExchangeOnline {
 }
 
 function Get-MsolUserAttributes {
-    param 
-    (   [parameter(mandatory=$TRUE)] $UserPrincipalName
-    )
+#    param ([parameter(mandatory=$TRUE)] $UserPrincipalName
+#    )
     Connect-MsolService 
     $targetuser = Read-Host -Prompt 'Input the username'
     Get-MsolUser -userprincipalname $targetuser | Select-Object UserprincipalName,ImmutableID,WhenCreated,LastDirSyncTime
