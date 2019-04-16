@@ -3,20 +3,14 @@
 #
 #
 #    Changelog:
-#         
-#       04/16/19 -  Got rid of annoying EXO connecting at startup
-#                   Added OneDrive function to change storage quota
-#                   Added function for mailbox auditing
-#                   Updated Changelog appearance
-#                   Added UserAttribute function
-#                   
-#       04/10/19 -  Forked from Codys profile (props to Cody)
-#       11/04/18 -  Added alias for Get-Command as gcmd
+#         04/16/10 - Got rid of annoying EXO connecting at startup
+#         04/10/19 - Forked from Codys profile (props to Cody)
+#         11/04/18 - Added alias for Get-Command as gcmd
 #                   Update References to ProfilePath
-#       09/15/18 -  Updated prompt support for PowerShell Core
-#       03/23/18 -  Added Prompt customizations
+#        09/15/18 - Updated prompt support for PowerShell Core
+#        03/23/18 - Added Prompt customizations
 #                   Added Persistent history
-#       03/17/18 -  Added New-Key
+#        03/17/18 - Added New-Key
 #                   Moved Credential import to function instead of execution
 #                   Added local option for file
 #                   Invoke-Bsod
@@ -27,7 +21,7 @@
 #                   Search-HostsFile
 #                   Add-HostsFile
 #                   Open-HostsFile
-#        12/28/17 - PowerShell Core support for Get-XKCDPasswor
+#        12/28/17 - PowerShell Core support for Get-XKCDPassword
 #                   Removed unnecessary Cim call in Get-ComputerUptime
 #        12/11/17 - PowerShell Core Support for Get-Goat
 #        12/09/17 - PowerShell Core Support for Initial Setup
@@ -38,10 +32,10 @@
 #        12/03/17 - Overhaul of Connect-ExchangeOnline. Now checks for Modern Authentication
 #        12/02/17 - Added Connect-SecurityAndComplianceCenter
 #        10/22/17 - Added Resources Section which includes:
-#                   Get-ComputerUtilization
-#                   Get-ComputerCpuUtilization
-#                   Get-ComputerMemoryUtilization
-#                   Get-ComputerUptime
+#                    Get-ComputerUtilization
+#                    Get-ComputerCpuUtilization
+#                    Get-ComputerMemoryUtilization
+#                    Get-ComputerUptime
 #        09/15/17 - Added Add-CredentialToCsv & changed credential handling in functions
 #        09/14/17 - Added credential import from CSV
 #                   Changed default module location to $ProfilePath\CstmModules
@@ -53,10 +47,10 @@
 #        07/14/17 - Added Get-ExternalIPAddress
 #        06/28/17 - Added Update-Profile for easy profile management & added cleanup
 #        06/26/17 - v1 overhaul:
-#                   $secret now brought in as secure string
-#                   checks for existing profileKey even if not in default path
-#                   new module handling
-#                   Added Update Switch to update script and modules
+#                    $secret now brought in as secure string
+#                    checks for existing profileKey even if not in default path
+#                    new module handling
+#                    Added Update Switch to update script and modules
 #        06/25/17 - Added new alias & created connect-exchangeonline
 #        06/20/17 - Added Get-goat
 #        05/15/17 - Removed aggressive/unnecessary importing
@@ -104,7 +98,7 @@ function Prompt{
 
     # whoami
     Write-Host "`n[" -NoNewline
-    Write-Host "$(whoami)" -NoNewline -ForegroundColor Green
+    Write-Host "$(whoami)" -NoNewline -ForegroundColor Blue
 
     if($PSVersionTable.OS -like "Darwin*"){ Write-Host "@$(scutil --get LocalHostName)]: " -NoNewline }
     else { Write-Host "@$(hostname)]: " -NoNewline }
@@ -180,6 +174,7 @@ function Update-Profile {
         $updateCommand = "$ProfilePath\profile.ps1 -Update"
         Invoke-Expression $updateCommand
     }
+. $profilepath\profile.ps1
 }
 
 # get profile version
@@ -380,14 +375,6 @@ function Connect-ExchangeOnline {
         $PSSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri $ConnectionURI -AllowRedirection -Credential $Credential -Authentication Basic
     }
     if ($PSSession -ne $null) { Import-PSSession $PSSession -AllowClobber }
-}
-
-function Get-MsolUserAttributes {
-#    param ([parameter(mandatory=$TRUE)] $UserPrincipalName
-#    )
-    Connect-MsolService 
-    $targetuser = Read-Host -Prompt 'Input the username'
-    Get-MsolUser -userprincipalname $targetuser | Select-Object UserprincipalName,ImmutableID,WhenCreated,LastDirSyncTime
 }
 
 # connect to the security and compliance center using modern or basic authentication
@@ -707,9 +694,7 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
-profileSetAlias Get-MsolUserAttributes ID
-profileSetAlias update-profile up
-profileSetAlias set-ODquota OD
+profileSetAlias OD Set-ODQuota
 profileSetAlias touch New-Item
 profileSetAlias grep Select-String
 profileSetAlias get-commands get-command #bc I always accidently type this instead
@@ -786,5 +771,4 @@ Remove-Variable Update,Version
 
 # Change Directory to $home
 Set-Location $home
-
 
