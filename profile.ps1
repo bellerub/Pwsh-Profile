@@ -550,7 +550,7 @@ function Set-ODQuota {
     
     }
     Function Sync-ADDelta {
-    param ([parameter(mandatory=$TRUE)] @Userprincipalname)
+    param ([parameter(mandatory=$TRUE)] $Userprincipalname)
 
 Enter-PSSession -ComputerName esu2sync.esu2.org 
 
