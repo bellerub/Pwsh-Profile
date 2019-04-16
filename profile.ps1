@@ -145,7 +145,7 @@ Function Get-HyperVHost {
 }
 
 # update profile & modules
-function  {
+function Update-Profile  {
     [CmdletBinding(DefaultParameterSetName='Remote')]
     Param(
         [Parameter(ParameterSetName='Local')]
