@@ -516,7 +516,7 @@ function Import-PSCredentialCsv{
 }
 function Set-ODQuota {
 
-    Connect-SPOService -Url https://esu2org-admin.sharepoint.com #-Credential $credential
+    Connect-SPOService -Url https://esu2org-admin.sharepoint.com
     
     #define target user
     $targetuser = Read-Host -Prompt 'Input the username to change storage quota'
@@ -549,6 +549,13 @@ function Set-ODQuota {
     Get-Mailbox | Select Name, AuditEnabled, AuditLogAgeLimit
     
     }
+
+    Function Sync-ADDelta {
+        param ([parameter(mandatory=$TRUE)] @Userprincipalname
+        )
+    
+    Connect-ExchangeOnline -UserPrincipalName $userprinicipalname
+    }    
 
 # Create Randomized Key
 function New-Key {
