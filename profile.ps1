@@ -513,7 +513,6 @@ function Import-PSCredentialCsv{
         Write-Error $_
     }
 }
-
 function Set-ODQuota {
 
     Connect-SPOService -Url https://esu2org-admin.sharepoint.com #-Credential $credential
@@ -533,6 +532,22 @@ function Set-ODQuota {
     Get-SPOSite -Identity https://esu2org-my.sharepoint.com/personal/$path | select -property storagequota
     }
 
+    Function Enable-MailboxAudit {
+
+        param ([parameter(mandatory=$TRUE)] $userprincipalname
+    
+    )
+    
+    #Connect-SPOService -Url https://esu2org-admin.sharepoint.com -UserPrincipalName $userprincipalname
+    Connect-ExchangeOnline -UserPrincipalName $userprincipalname   
+    
+    #Enable global audit logging
+    Get-Mailbox -ResultSize Unlimited -Filter {RecipientTypeDetails -eq "UserMailbox" -or RecipientTypeDetails -eq "SharedMailbox" -or RecipientTypeDetails -eq "RoomMailbox" -or RecipientTypeDetails -eq "DiscoveryMailbox"}| Set-Mailbox -AuditEnabled $true -AuditLogAgeLimit 365 -AuditOwner Create,HardDelete,MailboxLogin,MoveToDeletedItems,SoftDelete,Update
+    
+    #Double-Check It!
+    Get-Mailbox | Select Name, AuditEnabled, AuditLogAgeLimit
+    
+    }
 
 # Create Randomized Key
 function New-Key {
