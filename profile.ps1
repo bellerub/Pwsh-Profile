@@ -304,7 +304,7 @@ function Get-XKCDPassword {
     )
 
     if($UpdateDictionary -or !(Test-Path $Path)){
-        Write-Host "Updating Dictionary..." -ForegroundColor Green
+        Write-Host "Updating Dictionary..." -ForegroundColor Red
         Remove-Item -Path $Path -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Force
         Invoke-WebRequest -Uri $Uri -OutFile $Path
     }
@@ -551,7 +551,7 @@ function Set-ODQuota {
     }
 
     Function Sync-ADDelta {
-        param ([parameter(mandatory=$TRUE)] @Userprincipalname
+        param ([parameter(mandatory=$TRUE)] $Userprincipalname
         )
     
     Connect-ExchangeOnline -UserPrincipalName $userprinicipalname
@@ -780,6 +780,10 @@ Remove-Variable Update,Version
 
 # Change Directory to $home
 Set-Location $home
+
+#TEST
+
+
 
 
 
