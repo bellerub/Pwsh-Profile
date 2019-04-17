@@ -705,6 +705,7 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
+profileSetAlias Sync-AD Sync-ADDelta
 profileSetAlias OD Set-ODQuota
 profileSetAlias corey ping
 profileSetAlias up update-profile
