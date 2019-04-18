@@ -705,6 +705,7 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
+profileSetAlias ns nslookup
 profileSetAlias Sync-AD Sync-ADDelta
 profileSetAlias OD Set-ODQuota
 profileSetAlias corey ping
