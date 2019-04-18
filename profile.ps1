@@ -56,8 +56,6 @@
 #        05/15/17 - Removed aggressive/unnecessary importing
 #
 ############################################################################################################>
-Start-Transcript -Path G:\PSoutputlog\$Date.log.txt
-
 [CmdletBinding()]
 Param(
     [Parameter(Position=0)]
@@ -786,11 +784,4 @@ Remove-Variable Update,Version
 
 # Change Directory to $home
 Set-Location $home
-
-#TEST
-
-
-
-
-
-
+Start-Transcript -Path G:\PSoutputlog\$Date.log.txt 
