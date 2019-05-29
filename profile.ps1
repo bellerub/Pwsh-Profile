@@ -127,26 +127,6 @@ function Prompt{
 # Get-Time
 function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() } ) }
 
-
-function Remove-DisUser 
-{
-    $user = Read-Host "Enter the name of the User"
-
-    $user = Get-ADUser   -filter {(UserPrincipalName -eq $user) -and (Enabled -eq $false)}
-    $user | select UserPrincipalName,Enabled | Out-GridView -PassThru
-    Get-ADPrincipalGroupMembership $user| foreach {Remove-ADGroupMember $_ -Members $user -Confirm:$true}
-}
-Function Start-Monitoring  {
-    While ($true)
-    {
- $path = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" 
- get-process | where-object {$_.Path -eq $path } | measure-object | where-object { $_.Count -eq 0} | foreach-object {start-process -filepath $path  }
-         
-         # Add a pause so the loop doesn't run super fast and use lots of CPU        
-         Start-Sleep -Seconds 3
-     }
- }
-
 # Get-HyperVHost
 Function Get-HyperVHost {
     Param(
@@ -723,7 +703,6 @@ function profileSetAlias{
 }
 
 # Standard Cmdlets
-profileSetAlias grep Select-String
 profileSetAlias ns nslookup
 profileSetAlias Sync-AD Sync-ADDelta
 profileSetAlias OD Set-ODQuota
@@ -804,6 +783,5 @@ Remove-Item -Path Variable:\profileKey
 Remove-Variable Update,Version
 
 # Change Directory to $home
-import-module ActiveDirectory
 Set-Location $home
 #Start-Transcript -Path G:\PSoutputlog\$Date.log.txt 
