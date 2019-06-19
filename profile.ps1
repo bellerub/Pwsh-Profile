@@ -6,7 +6,7 @@
 #         06/19/19 - Added Function Test-PendingReboot 
 #                      Renamed Test-PendingReboot to Test-Reboot
 #                      Added (some) changes from Codys profile since initial fork
-#                      Added auto-exit with 5 second wait after running update-profile
+#                      Added auto-exit with 3s delay and call a bat file that relaunches vscode after running update-profile
 #         04/16/10 - Got rid of annoying EXO connecting at startup
 #         04/10/19 - Forked from Codys profile (props to Cody)
 #         11/04/18 - Added alias for Get-Command as gcmd
