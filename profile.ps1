@@ -177,7 +177,7 @@ function Update-Profile  {
         Invoke-Expression $updateCommand
         
     }
-$p = get-process -Name Code    
+$p = Get-Process -Name Code    
 Stop-Process -InputObject $p
 Get-Process | Where-Object {$_.HasExited}
     #. $profilepath\profile.ps1
