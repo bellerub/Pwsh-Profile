@@ -90,7 +90,7 @@ $HistoryFilePath = Join-Path $home .ps_history
 Register-EngineEvent PowerShell.Exiting -Action { Get-History | Export-Clixml $HistoryFilePath } | out-null
 if (Test-path $HistoryFilePath) { Import-Clixml $HistoryFilePath | Add-History }
 
-# Customize my prompt
+# Customize my prompts
 function Prompt{
     # Cache value so we can set it back later
     $realLASTEXITCODE = $LASTEXITCODE
