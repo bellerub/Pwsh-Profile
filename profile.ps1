@@ -174,12 +174,13 @@ function Update-Profile  {
         }
     }
     if($IncludeModules){
+    
         $updateCommand = "$ProfilePath\profile.ps1 -Update"
         Invoke-Expression $updateCommand
         
     }
     start-sleep -Seconds 5
-    & 'C:\Users\ccolvin.ESU2.000\Documents\WindowsPowerShell\Scripts\autolaunch ps.bat'
+    powershell.exe -command "Start-Process $home/documents/windowspowershell/scripts/autops.bat -Verb runas"   
     $p = Get-Process -Name Code    
     Stop-Process -InputObject $p
     Get-Process | Where-Object {$_.HasExited}
