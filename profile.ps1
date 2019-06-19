@@ -183,8 +183,7 @@ function Update-Profile  {
     $p = Get-Process -Name Code    
     Stop-Process -InputObject $p
     Get-Process | Where-Object {$_.HasExited}
-    C:\Users\ccolvin.ESU2.000\Documents\WindowsPowerShell\Scripts\autolaunch ps.bat
-    #. $profilepath\profile.ps1
+        #. $profilepath\profile.ps1
 }
 
 # get profile version
