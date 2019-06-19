@@ -175,6 +175,7 @@ function Update-Profile  {
         
     }
 #. $profilepath\profile.ps1
+exit
 }
 
 # get profile version
