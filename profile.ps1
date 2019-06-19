@@ -3,7 +3,7 @@
 #
 #
 #    Changelog:
-#         06/19/19 - Added Function Test-PendingReboot
+#         06/19/19 - Added Function Test-Reboot
 #         04/16/10 - Got rid of annoying EXO connecting at startup
 #         04/10/19 - Forked from Codys profile (props to Cody)
 #         11/04/18 - Added alias for Get-Command as gcmd
@@ -396,7 +396,7 @@ function Connect-SecurityAndComplianceCenter {
 #
 #############################################################################################################
 
-function Test-PendingReboot
+function Test-Reboot
 {
  if (Get-ChildItem "HKLM:\Software\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending" -EA Ignore) { return $true }
  if (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" -EA Ignore) { return $true }
