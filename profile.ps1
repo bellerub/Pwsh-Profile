@@ -189,7 +189,7 @@ function Update-Profile  {
     #. $profilepath\profile.ps1
 }
 
-# get profile version TEST CHANGE
+# get profile version
 function Get-ProfileVersion { invoke-expression "$ProfilePath\profile.ps1 -Version" }
 
 # why goat farming is better than IT
