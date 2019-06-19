@@ -172,6 +172,7 @@ function Update-Profile  {
     if($IncludeModules){
         $updateCommand = "$ProfilePath\profile.ps1 -Update"
         Invoke-Expression $updateCommand
+        exit
     }
 #. $profilepath\profile.ps1
 }
