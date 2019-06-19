@@ -178,8 +178,8 @@ function Update-Profile  {
         Invoke-Expression $updateCommand
         
     }
-    C:\Users\ccolvin.ESU2.000\Documents\WindowsPowerShell\Scripts\autolaunch ps.bat
     start-sleep -Seconds 5
+    & 'C:\Users\ccolvin.ESU2.000\Documents\WindowsPowerShell\Scripts\autolaunch ps.bat'
     $p = Get-Process -Name Code    
     Stop-Process -InputObject $p
     Get-Process | Where-Object {$_.HasExited}
