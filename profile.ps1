@@ -192,7 +192,7 @@ Function Get-Goat {
     Write-Host ""
 }
 
-# Create Bsod
+# Create Bso
 function Invoke-Bsod{
     Param(
         [String]$Computername = $env:COMPUTERNAME,
