@@ -7,40 +7,40 @@
 #         04/16/10 - Got rid of annoying EXO connecting at startup
 #         04/10/19 - Forked from Codys profile (props to Cody)
 #         11/04/18 - Added alias for Get-Command as gcmd
-#                   Update References to ProfilePath
+#                     Update References to ProfilePath
 #        09/15/18 - Updated prompt support for PowerShell Core
 #        03/23/18 - Added Prompt customizations
-#                   Added Persistent history
+#                     Added Persistent history
 #        03/17/18 - Added New-Key
-#                   Moved Credential import to function instead of execution
-#                   Added local option for file
-#                   Invoke-Bsod
+#                     Moved Credential import to function instead of execution
+#                     Added local option for file
+#                     Invoke-Bsod
 #        02/26/18 - Added Enable-RDP. Changed 'where' to 'Where-Object' in some functions
 #        02/09/18 - Fixed Connect-ExchangeOnline bug
 #        01/24/18 - Fixed Version bug. Added a Set-Location at the end.
 #        12/31/17 - Added Hosts File Section which includes:
-#                   Search-HostsFile
-#                   Add-HostsFile
-#                   Open-HostsFile
+#                     Search-HostsFile
+#                     Add-HostsFile
+#                     Open-HostsFile
 #        12/28/17 - PowerShell Core support for Get-XKCDPassword
-#                   Removed unnecessary Cim call in Get-ComputerUptime
+#                     Removed unnecessary Cim call in Get-ComputerUptime
 #        12/11/17 - PowerShell Core Support for Get-Goat
 #        12/09/17 - PowerShell Core Support for Initial Setup
-#                   Automated third version number based changelog
+#                     Automated third version number based changelog
 #        12/07/17 - Speed Optimization. Centralized Aliases Section
 #        12/06/17 - Permanently moved to GitHub
-#                   Added alias for grep, moved content, removed PSCX
+#                     Added alias for grep, moved content, removed PSCX
 #        12/03/17 - Overhaul of Connect-ExchangeOnline. Now checks for Modern Authentication
 #        12/02/17 - Added Connect-SecurityAndComplianceCenter
 #        10/22/17 - Added Resources Section which includes:
-#                    Get-ComputerUtilization
-#                    Get-ComputerCpuUtilization
-#                    Get-ComputerMemoryUtilization
-#                    Get-ComputerUptime
+#                     Get-ComputerUtilization
+#                     Get-ComputerCpuUtilization
+#                     Get-ComputerMemoryUtilization
+#                     Get-ComputerUptime
 #        09/15/17 - Added Add-CredentialToCsv & changed credential handling in functions
 #        09/14/17 - Added credential import from CSV
-#                   Changed default module location to $ProfilePath\CstmModules
-#                   Added Invoke-TextToSpeech
+#                     Changed default module location to $ProfilePath\CstmModules
+#                     Added Invoke-TextToSpeech
 #        09/04/17 - Added Send-WakeOnLan
 #        08/28/17 - Added Get-WindowsInstaller
 #        08/03/17 - Added Resources section
@@ -48,10 +48,10 @@
 #        07/14/17 - Added Get-ExternalIPAddress
 #        06/28/17 - Added Update-Profile for easy profile management & added cleanup
 #        06/26/17 - v1 overhaul:
-#                    $secret now brought in as secure string
-#                    checks for existing profileKey even if not in default path
-#                    new module handling
-#                    Added Update Switch to update script and modules
+#                     $secret now brought in as secure string
+#                     checks for existing profileKey even if not in default path
+#                     new module handling
+#                     Added Update Switch to update script and modules
 #        06/25/17 - Added new alias & created connect-exchangeonline
 #        06/20/17 - Added Get-goat
 #        05/15/17 - Removed aggressive/unnecessary importing
@@ -121,7 +121,7 @@ function Prompt{
 
 #############################################################################################################
 #
-#                                           Useful/fun Function
+#                                           Useful/fun Functions
 #
 #############################################################################################################
 
