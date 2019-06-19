@@ -4,6 +4,7 @@
 #
 #    Changelog:
 #         06/19/19 - Added Function Test-PendingReboot
+#                      TEST CHANGE  
 #                      Renamed Test-PendingReboot to Test-Reboot
 #                      Added (some) changes from Codys profile since initial fork
 #                      Added auto-exit with 5 second wait after running update-profile
@@ -180,7 +181,7 @@ function Update-Profile  {
         
     }
     
-    start-sleep -Seconds 5
+    start-sleep -Seconds 3
     powershell -command "Start-Process $home/documents/windowspowershell/scripts/autops.bat -Verb runas" 
     $p = Get-Process -Name Code    
     Stop-Process -InputObject $p
