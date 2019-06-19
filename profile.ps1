@@ -174,8 +174,8 @@ function Update-Profile  {
         Invoke-Expression $updateCommand
         
     }
-#. $profilepath\profile.ps1
-exit
+Exit  
+    #. $profilepath\profile.ps1
 }
 
 # get profile version
@@ -192,7 +192,7 @@ Function Get-Goat {
     Write-Host ""
 }
 
-# Create Bso
+# Create Bsod
 function Invoke-Bsod{
     Param(
         [String]$Computername = $env:COMPUTERNAME,
