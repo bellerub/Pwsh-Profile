@@ -179,8 +179,9 @@ function Update-Profile  {
         Invoke-Expression $updateCommand
         
     }
+    
     start-sleep -Seconds 5
-    powershell.exe -command "Start-Process $home/documents/windowspowershell/scripts/autops.bat -Verb runas"   
+    powershell -command "Start-Process $home/documents/windowspowershell/scripts/autops.bat -Verb runas" 
     $p = Get-Process -Name Code    
     Stop-Process -InputObject $p
     Get-Process | Where-Object {$_.HasExited}
@@ -188,7 +189,7 @@ function Update-Profile  {
     #. $profilepath\profile.ps1
 }
 
-# get profile version
+# get profile version TEST CHANGE
 function Get-ProfileVersion { invoke-expression "$ProfilePath\profile.ps1 -Version" }
 
 # why goat farming is better than IT
