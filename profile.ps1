@@ -6,6 +6,7 @@
 #         06/19/19 - Added Function Test-PendingReboot
 #                      Renamed Test-PendingReboot to Test-Reboot
 #                      Added (some) changes from Codys profile since initial fork
+#                      Added auto-exit with 5 second wait after running update-profile
 #         04/16/10 - Got rid of annoying EXO connecting at startup
 #         04/10/19 - Forked from Codys profile (props to Cody)
 #         11/04/18 - Added alias for Get-Command as gcmd
@@ -177,7 +178,7 @@ function Update-Profile  {
         Invoke-Expression $updateCommand
         
     }
-    start-sleep -Seconds 10
+    start-sleep -Seconds 5
     $p = Get-Process -Name Code    
     Stop-Process -InputObject $p
     Get-Process | Where-Object {$_.HasExited}
