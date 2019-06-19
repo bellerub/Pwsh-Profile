@@ -177,7 +177,7 @@ function Update-Profile  {
         Invoke-Expression $updateCommand
         
     }
-Exit  
+Stop-Process -Name "code.exe"
     #. $profilepath\profile.ps1
 }
 
