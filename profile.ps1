@@ -133,6 +133,7 @@ function Prompt{
 # Get-Time
 
 #Definition of the function that allows to delete the Office 365 users contained in the CSV file.
+
 function Remove-Office365Users
 {
     param ($sInputFile,$sColumnName)
@@ -163,14 +164,16 @@ function Remove-Office365Users
     {
         Write-Host -ForegroundColor Red $_.Exception.ToString()   
     }  
-
+    $sInputFile="C:\Users\ccolvin\Desktop\yutan\dis.csv"
+    $sColumnName="UserPrincipalName"
+    Remove-Office365Users -sInputFile $sInputFile -sColumnName $sColumnName
 }
 
 #$ScriptDir = Split-Path -parent $MyInvocation.MyCommand.Path
 #$ScriptDir = $PSScriptRoot
-$sInputFile="C:\Users\ccolvin\Desktop\yutan\dis.csv"
-$sColumnName="UserPrincipalName"
-Remove-Office365Users -sInputFile $sInputFile -sColumnName $sColumnName
+#$sInputFile="C:\Users\ccolvin\Desktop\yutan\dis.csv"
+#$sColumnName="UserPrincipalName"
+#Remove-Office365Users -sInputFile $sInputFile -sColumnName $sColumnName
 
 function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() } ) }
 
