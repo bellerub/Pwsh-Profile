@@ -3,7 +3,8 @@
 #
 #
 #    Changelog:
-#         06/19/19 - Added Function Test-PendingReboot 
+#          10/22/19 - Added new function to remove users in bulk from Office 365
+#          06/19/19 - Added Function Test-PendingReboot 
 #                      Renamed Test-PendingReboot to Test-Reboot
 #                      Added (some) changes from Codys profile since initial fork
 #                      Added auto-exit with 3s delay and call a bat file that relaunches vscode after running update-profile
