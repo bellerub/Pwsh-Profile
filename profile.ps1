@@ -131,6 +131,47 @@ function Prompt{
 #############################################################################################################
 
 # Get-Time
+
+#Definition of the function that allows to delete the Office 365 users contained in the CSV file.
+function Remove-Office365Users
+{
+    param ($sInputFile,$sColumnName)
+    try
+    {
+            # Reading the CSV file
+        $bFileExists = (Test-Path $sInputFile -PathType Leaf) 
+        if ($bFileExists) { 
+            "Loading $InvFile for processing..." 
+            $tblDatos = Import-CSV $sInputFile            
+        } else { 
+            Write-Host "$sInputFile file not found. Stopping the import process!" -ForegroundColor Red
+            exit 
+        }         
+        # Deleting the users
+        Write-Host "Deleting the Office 365 users ..." -foregroundcolor Green    
+        foreach ($fila in $tblDatos) 
+        { 
+            "Deleting user " + $fila.$sColumnName.ToString()            
+            Get-MsolUser -UserPrincipalName $fila.$sColumnName | Remove-MsolUser -Force #-RemoveFromRecycleBin
+        } 
+
+        Write-Host "-----------------------------------------------------------"  -foregroundcolor Blue
+        Write-Host "All the users have been deleted. The processs is completed." -foregroundcolor Blue
+        Write-Host "-----------------------------------------------------------"  -foregroundcolor Blue
+        }
+    catch [System.Exception]
+    {
+        Write-Host -ForegroundColor Red $_.Exception.ToString()   
+    }  
+
+}
+
+#$ScriptDir = Split-Path -parent $MyInvocation.MyCommand.Path
+#$ScriptDir = $PSScriptRoot
+$sInputFile="C:\Users\ccolvin\Desktop\yutan\dis.csv"
+$sColumnName="UserPrincipalName"
+Remove-Office365Users -sInputFile $sInputFile -sColumnName $sColumnName
+
 function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() } ) }
 
 # Get-HyperVHost
