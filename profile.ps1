@@ -131,15 +131,17 @@ function Prompt{
 #############################################################################################################
 
 # Get-Time
-
+function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() } ) }
 #Definition of the function that allows to delete the Office 365 users contained in the CSV file.
 
-function Remove-Office365Users
-{
+
+#Remove office 365 users in bulk via .csv file
+Function  Remove-Office365Users {
+
     param ($sInputFile,$sColumnName)
     try
     {
-            # Reading the CSV file
+        # Reading the CSV file
         $bFileExists = (Test-Path $sInputFile -PathType Leaf) 
         if ($bFileExists) { 
             "Loading $InvFile for processing..." 
@@ -175,7 +177,7 @@ function Remove-Office365Users
 #$sColumnName="UserPrincipalName"
 #Remove-Office365Users -sInputFile $sInputFile -sColumnName $sColumnName
 
-function Get-Time {  return $(get-date | ForEach-Object { $_.ToLongTimeString() } ) }
+
 
 # Get-HyperVHost
 Function Get-HyperVHost {
