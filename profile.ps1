@@ -58,7 +58,7 @@
 #                     Added Update Switch to update script and modules
 #        06/25/17 - Added new alias & created connect-exchangeonline
 #        06/20/17 - Added Get-goat
-#        05/15/17 - Removed aggressive/unnecessary importing
+#        05/15/17 - Removed aggressive/unnecessary importing   
 #
 ############################################################################################################>
 
