@@ -3,7 +3,7 @@
 #
 #
 #    Changelog:
-#          10/22/19 - Added new function to remove users in bulk from Office 36
+#          10/22/19 - Added new function to remove users in bulk from Office 365
 #          06/19/19 - Added Function Test-PendingReboot 
 #                      Renamed Test-PendingReboot to Test-Reboot
 #                      Added (some) changes from Codys profile since initial fork
@@ -250,16 +250,6 @@ Function Get-Goat {
     Write-Host ""
     $OriginalPref = $ProgressPreference
     $ProgressPreference = "SilentlyContinue"
-    try{
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $URI = "http://www.heldeus.nl/goat/GoatFarming.html"
-        $HTML = Invoke-WebRequest -Uri $URI -UseBasicParsing
-        $response = ($HTML.Content.Remove(0,67) -split('<p class="goat">') |  Get-Random).TrimStart()
-        Write-Host "Why Goatfarming is better than IT: $($response.Substring(0,$response.indexof('</p>')))"
-    }catch{
-        Write-Host "Why Goatfarming is better than IT: Goat farming doesn't require an internet connection."
-    }
-    $ProgressPreference = $OriginalPref
 }
 
 # Create Bsod
