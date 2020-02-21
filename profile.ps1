@@ -3,7 +3,7 @@
 #
 #
 #    Changelog:
-#          10/22/19 - Added new function to remove users in bulk from Office 365
+#          10/22/19 - Added new function to remove users in bulk from Office 36
 #          06/19/19 - Added Function Test-PendingReboot 
 #                      Renamed Test-PendingReboot to Test-Reboot
 #                      Added (some) changes from Codys profile since initial fork
